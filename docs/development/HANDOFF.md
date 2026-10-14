@@ -2,12 +2,44 @@
 
 Active agent lock: RELEASED
 
+## Post-M0 work: ADR 0021 on an isolated branch
+- [Verified] Branch **`docs/adr-0021-hybrid-ai`** was created from `docs/planning-v0` at `2235608`. It carries **one local commit** with ADR 0021 and its supporting docs. **Not pushed; no PR.**
+- [Verified] `docs/planning-v0` is untouched: local and `origin` both still point to `2235608`.
+- ADR 0021 status: **Accepted as the v0.2+ direction** (human, 2026-10-14). Benchmark protocol, prototypes, and provider endpoint details stay pending.
+- Contents of the ADR 0021 commit:
+  - `docs/adr/0021-hybrid-ai-orchestration.md` (new)
+  - `docs/adr/README.md` (new living ADR index and decision register)
+  - `docs/architecture/security-boundaries.md` (SB-15, SB-16, SB-17)
+  - `docs/architecture/interfaces.md` (AI orchestration sketch)
+  - `AI_DEVELOPMENT.md` (ledger rows)
+  - this file
+- The frozen M0 planning docs are **unchanged**: `docs/planning/17-decisions-for-approval.md` was restored to byte-identical with `2235608`.
+
+### Integrating ADR 0021 after M0 is merged (squash merge)
+After the M0 PR is **squash-merged**, `main` gets a *new* commit (call it `S`) with the same content as `2235608`, but `2235608` is **not** an ancestor of `main`. If `docs/adr-0021-hybrid-ai` were pushed and PR'd as-is, the PR would show the M0 commit again. To avoid that, move only the ADR 0021 commit onto the new `main`. Each step needs the human's go-ahead:
+1. `git fetch origin` and confirm the M0 PR is merged: `git log --oneline -3 origin/main` shows the squash commit.
+2. Check that the squash commit's content equals the M0 branch, so the ADR commit applies cleanly: `git diff 2235608 origin/main --stat` should be empty. If M0 changed during review, expect conflicts in `AI_DEVELOPMENT.md`, `HANDOFF.md`, or `interfaces.md`.
+3. **Option A (recommended, no history rewrite):** create a fresh branch from `main` and cherry-pick the ADR commit:
+   ```
+   git switch -c docs/adr-0021-hybrid-ai-v2 origin/main
+   git cherry-pick <ADR-0021-commit-sha>
+   ```
+   **Option B (rewrites this local, unpushed branch; needs explicit approval per AGENTS.md):**
+   ```
+   git rebase --onto origin/main 2235608 docs/adr-0021-hybrid-ai
+   ```
+4. Resolve any conflicts. Then re-run the link check and `git diff origin/main --stat`, and confirm the diff contains only the ADR 0021 files above.
+5. Update this HANDOFF with the new branch and SHA. With authorization, push and open a PR to `main`.
+6. Leave the old local `docs/adr-0021-hybrid-ai` branch alone. Agents never delete branches; the human may delete it later.
+
+If M0 is merged with a merge commit instead of a squash, `2235608` becomes an ancestor of `main`, and the branch can be PR'd directly.
+
 > **[Verified]** means it was checked by a command in the session that wrote this section, with the output pasted.
 > **[Assumed]** means it was not checked.
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- Milestone: **M0, Planning: final.** The documentation is committed on `docs/planning-v0` and submitted as a pull request to `main`.
+- Milestone: **M0, Planning: final.** The documentation is committed on `docs/planning-v0` (`2235608`) and pushed to `origin`. The agent could **not** open the PR (`gh` not installed). Whether the human has opened it is **[Assumed: unknown to the agent]**.
 - **The PR is NOT merged. Merging is not authorized.**
 - **Sprint 1 is NOT authorized.** Do not write application code, install dependencies, run privileged operations, or change firewall or system settings.
 
