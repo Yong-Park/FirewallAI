@@ -10,7 +10,7 @@ Keep this file short; details live in the linked docs. If instructions conflict 
 - No application code may be written until the human explicitly authorizes the sprint it belongs to.
 
 ## 2. Stack (status follows the ADRs)
-Proposed until the matching ADR in [docs/adr/](docs/adr/) is **Accepted**. Do not treat Proposed items as settled; do not introduce alternatives without an ADR.
+Proposed until the matching ADR is **Accepted**. Current statuses: [docs/adr/README.md](docs/adr/README.md), the living ADR index. Do not treat Proposed items as settled; do not introduce alternatives without an ADR.
 - Python 3.12 · PySide6 (Qt, LGPL) · uv (+ lockfile) · pydantic v2 · SQLite (stdlib `sqlite3`) · pytest / pytest-qt / hypothesis · ruff · mypy.
 - Firewall read: PowerShell NetSecurity against `ActiveStore` via fixed embedded scripts → JSON. Network/process: psutil.
 - AI (v0.2+): Ollama on loopback by default, behind a provider-agnostic interface. Cloud providers optional, off by default.
@@ -57,7 +57,7 @@ Invariants: [docs/architecture/security-boundaries.md](docs/architecture/securit
 - Full workflow: [docs/development/AGENT_WORKFLOW.md](docs/development/AGENT_WORKFLOW.md).
 
 ## 8. Documentation
-- Significant architecture changes need an ADR **before** implementation ([docs/adr/template.md](docs/adr/template.md); ADR number = decision number D1–D20).
+- Significant architecture changes need an ADR **before** implementation ([docs/adr/template.md](docs/adr/template.md)). ADR number = decision number (ADR `NNNN` = `DNN`). Numbering continues past D20: the next free number is listed in the living index [docs/adr/README.md](docs/adr/README.md), which you update with every ADR change. `docs/planning/17-decisions-for-approval.md` is a frozen M0 snapshot.
 - Update [docs/architecture/](docs/architecture/) in the same change as the code it describes.
 - Link, don't duplicate. `docs/planning/` is a frozen, approved snapshot (errata only).
 - Tag unverified claims `[ASSUMPTION]`, `[NEEDS PROTOTYPE]`, or `[VERIFY]`. Never fabricate tests, measurements, references, or compliance claims.
