@@ -1,0 +1,30 @@
+# Local hooks only: every hook runs a tool already pinned in uv.lock. No hook repositories or
+# binaries are downloaded. Gitleaks is intentionally NOT included until its binary source and
+# version are reviewed (human decision, 2026-10-14).
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --frozen ruff check
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff format --check
+        entry: uv run --frozen ruff format --check
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run --frozen mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: import-linter
+        name: import-linter contracts
+        entry: uv run --frozen lint-imports
+        language: system
+        types: [python]
+        pass_filenames: false

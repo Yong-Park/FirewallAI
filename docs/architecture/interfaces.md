@@ -1,8 +1,40 @@
 # Interfaces and contracts
 
-Status: **planned**. Signatures are illustrative until implemented, and this page will be filled in as code lands. Rationale: [../planning/03-architecture.md](../planning/03-architecture.md), [../planning/09-ai-integration.md](../planning/09-ai-integration.md).
+Status: mixed. Sections marked **implemented** reflect the code. Everything else is a planned, illustrative signature. Rationale: [../planning/03-architecture.md](../planning/03-architecture.md), [../planning/09-ai-integration.md](../planning/09-ai-integration.md).
 
-## Collectors (`collectors`, v0.1)
+## Implemented in M1.1 (2026-10-14)
+
+**Core** (`firewallai.core`)
+- `FirewallProfile` (frozen, `extra="forbid"`) with stable ID `fw_profile:<domain|private|public>`. The enums are `ProfileName`, `TriState` (true / false / not_configured), and `FirewallAction` (allow / block / not_configured).
+- `CollectorResult[T]` has `data`, `errors: tuple[CollectorError, ...]`, and `partial`. It enforces: no data requires an error, and data plus errors requires `partial`.
+- `CollectorError` has `code`, `source`, and `detail`. The codes are `access_denied`, `not_found`, `timeout`, `output_too_large`, `parse_error`, `invalid_value`, `execution_failed`, and `unsupported_platform`. `detail` holds stable identifiers only, never localized text or raw host data.
+- `DataClass` sensitivity metadata is declared on every field (`json_schema_extra={"sensitivity": ...}`). Unclassified fields are treated as `host_sensitive`.
+
+**Collectors** (`firewallai.collectors`)
+```python
+class FirewallProfileCollector(Protocol):          # protocols.py
+    @property
+    def source_id(self) -> str: ...
+    def collect_profiles(self) -> CollectorResult[tuple[FirewallProfile, ...]]: ...
+
+class PowerShellRunner:                            # windows/powershell_runner.py
+    def run(self, script: PowerShellScript, params: Mapping[str, JsonValue] | None = None,
+            *, source: str) -> RunOutcome: ...     # data or structured CollectorError
+```
+- Implementations: `WindowsFirewallProfileCollector` (read-only ActiveStore query) and `FixtureFirewallProfileCollector`. Both use the same parser, `profile_mapping.parse_profiles_payload`.
+- Scripts are constant `PowerShellScript` objects registered in `windows/scripts.py`. Each has an allowlist of read-only commands, a timeout, and an output cap.
+- Wire format between script and Python: one JSON envelope, `{"ok": true, "data": …}` or `{"ok": false, "error": {"category", "error_id", "hresult"}}`.
+
+**App** (`firewallai.app.profile_service`)
+- `ProfileService.get_profiles() -> ProfileReport`. The report holds the result, `source_id`, `collected_at` (UTC), and `elevated`.
+- `report_to_dict()` produces JSON schema `firewallai.profiles/1` with `scope: "local_policy_only"` and `read_only: true`.
+- `create_profile_service(fixture=None)`.
+
+**CLI:** `firewallai profiles [--json] [--fixture PATH]`. Exit codes: 0 complete, 1 failed, 2 usage error, 3 partial.
+**GUI:** `firewallai-gui [--fixture PATH]`. Collection runs in a `QThreadPool` worker and results come back through Qt signals.
+
+## Collectors, planned (`collectors`, v0.1)
+The rules collector is blocked on the D9 investigation ([ADR 0009](../adr/0009-firewall-read-path.md) evidence §B).
 ```python
 class FirewallCollector(Protocol):
     def profiles(self) -> CollectorResult[list[FirewallProfile]]: ...

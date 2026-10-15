@@ -45,3 +45,50 @@ Results are recorded in the spike report with the command lines used.
 - Firewall policy stores (PersistentStore, GPO stores, ActiveStore, RSOP).
 - CIM/WMI classes (`MSFT_NetFirewallRule`).
 - The WFP architecture: layers, sublayers, filters, and arbitration.
+
+## Evidence recorded 2026-10-14 (Sprint 1 Day 0 and M1.1). Status remains **Proposed**
+
+All observations come from read-only, non-elevated commands on test environment TE-1 (Windows 11 Pro build 26200, Windows PowerShell 5.1.26100, Spanish locale). These are informal single runs, not benchmarks.
+
+### A. Execution policy: no `-ExecutionPolicy Bypass` (human-confirmed 2026-10-14)
+- The machine's `LocalMachine` execution policy is **`AllSigned`**.
+- Scripts passed via **`-Command`** (a string argument) or via stdin ran without any execution-policy override. Execution policy applies to script **files** (`-File`, `.ps1`), not to command text.
+- Decision for the runner: **never** pass `-ExecutionPolicy Bypass`, `-EncodedCommand`, or `-File`.
+  - They aren't needed.
+  - `Bypass` and `-EncodedCommand` are common malware indicators that security products flag.
+  - Least privilege applies.
+- Implemented in M1.1. `powershell_runner.py` uses `-NoProfile -NonInteractive -NoLogo -Command <constant script>`, with parameters as JSON on stdin. Tests: `tests/security/test_powershell_runner.py` and `tests/integration/test_windows_powershell.py`.
+- This **supersedes** the `-ExecutionPolicy Bypass` example in the frozen planning doc [06-windows-integration.md §2](../planning/06-windows-integration.md) and the "Security" bullet in §5 above, which no longer applies.
+
+### B. Standard-user access to effective rules and filters (blocks the rules collector)
+| Query (`-PolicyStore ActiveStore` unless noted) | Standard user result |
+|---|---|
+| `Get-NetFirewallProfile` | OK (3 profiles) |
+| `Get-NetFirewallRule` | OK (**1,586 rules**) |
+| `Get-NetFirewallApplicationFilter -All` | OK (1,586), about 0.2 s |
+| `Get-NetFirewallServiceFilter -All` | OK (1,586), about 0.2 s |
+| `Get-NetFirewallPortFilter -All` | **Access denied** (`PermissionDenied`) |
+| `Get-NetFirewallAddressFilter -All` | **Access denied** |
+| `Get-NetFirewallPortFilter -All`, PersistentStore and default store | **Access denied** |
+| `Get-NetFirewallPortFilter -PolicyStore RSOP -All` | OK but **0** results (no GPO on TE-1) |
+| Per-rule association (`Get-NetFirewallRule …` piped to `Get-NetFirewallPortFilter`), first 20 rules | OK, about 0.37 s for 20 (a linear guess for all rules is about 29 s, **too slow** unless batching helps) [NEEDS PROTOTYPE] |
+| COM `HNetCfg.FwPolicy2.Rules` | OK, **1,583** rules **with ports/programs**, about 0.13 s. Store semantics vs. ActiveStore unverified (3-rule difference) [NEEDS PROTOTYPE] |
+
+**Implications:**
+1. The bulk-filter plan in §2 (`Get-NetFirewall*Filter -All` joined on `InstanceID`) **doesn't work as a standard user** for port and address filters, which the verdict engine needs most.
+2. **Elevation is not an acceptable workaround** in v0.1 (SB-02).
+3. The D9 investigation (milestone **M1.2**) must compare:
+   - (a) the COM `INetFwPolicy2` rules API: fidelity vs. ActiveStore, GPO merge behavior, and the 3-rule gap;
+   - (b) a batched per-rule association pipeline: measured timing;
+   - (c) WFP enumeration, if it's readable without elevation;
+   - (d) a combined approach (e.g. ActiveStore for the rule list plus app/service filters, COM for ports and addresses, cross-validated);
+   - and the resulting `Indeterminate` reasons for anything that remains unreadable.
+4. **No alternative is accepted by this evidence.** D9 stays Proposed until the M1.2 results are reviewed by the human.
+
+### C. Other runner-relevant facts
+- Error messages are **localized** (Spanish on TE-1). The runner classifies errors only by `CategoryInfo.Category`, `FullyQualifiedErrorId`, and HRESULT, never by message text (implemented and tested).
+- NetSecurity enum values verified via reflection:
+  - `GpoBoolean` is False=0, True=1, NotConfigured=2;
+  - `Action` is NotConfigured=0, Allow=2, Block=4;
+  - `DisabledInterfaceAliases` comes back as `[""]` when not configured.
+- Cold start of an empty `powershell.exe -NoProfile` was about 0.34 s. Live profile collection through the runner took 1.5–2.2 s (integration-test output).
