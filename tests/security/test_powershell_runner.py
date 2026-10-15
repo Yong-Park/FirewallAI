@@ -190,6 +190,26 @@ def test_malformed_output_is_classified(stdout: bytes, code: CollectorErrorCode)
     assert error.code is code
 
 
+def test_json_nesting_bomb_in_buffered_output_is_parse_error() -> None:
+    bomb = b"[" * 50_000 + b"]" * 50_000
+    error = interpret(ExecResult(0, bomb, b"", False, False), source="t").error
+    assert error is not None
+    assert error.code is CollectorErrorCode.PARSE_ERROR
+
+
+def test_buffered_stderr_flood_does_not_block_the_child() -> None:
+    code = (
+        "import sys\n"
+        "sys.stderr.write('e' * 2_000_000)\n"
+        "sys.stderr.flush()\n"
+        "sys.stdout.write('done')\n"
+    )
+    result = execute([sys.executable, "-c", code], b"", timeout_s=20, max_output_bytes=1024)
+    assert not result.timed_out
+    assert result.stdout == b"done"
+    assert len(result.stderr) <= 64 * 1024  # kept bounded, rest drained and discarded
+
+
 def test_utf8_bom_is_tolerated() -> None:
     outcome = interpret(
         ExecResult(0, "\ufeff".encode() + b'{"ok": true, "data": 1}', b"", False, False),

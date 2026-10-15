@@ -19,6 +19,8 @@ class CollectorErrorCode(StrEnum):
     INVALID_VALUE = "invalid_value"
     EXECUTION_FAILED = "execution_failed"
     UNSUPPORTED_PLATFORM = "unsupported_platform"
+    CANCELLED = "cancelled"
+    BUSY = "busy"  # another heavy firewall query is already running (single-flight)
 
 
 class CollectorError(BaseModel):

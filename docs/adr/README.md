@@ -20,7 +20,7 @@ This is the **living index and decision register** for FirewallAI. Update it in 
 | [0006](0006-v0-1-distribution.md) | D6 | v0.1 distribution (PyInstaller one-dir + Inno per-user) | Proposed | Clean-VM freeze test |
 | [0007](0007-code-signing.md) | D7 | Code signing (SignPath → OV; Azure not eligible from Guatemala) | Proposed | OV CA availability [VERIFY] |
 | [0008](0008-windows-10-support.md) | D8 | Windows 10 best-effort | Proposed | |
-| [0009](0009-firewall-read-path.md) | D9 | Firewall read path: ActiveStore, non-elevated; bulk inventory + per-rule restricted filters | **Accepted** (v0.1 direction) | Accepted 2026-10-14 after M1.2 ([report](../research/2026-10-14-d9-firewall-read-path.md)). No COM/WFP/registry as authoritative. **Detailed scan currently exceeds N-04** (about 15.7–20 s vs 10 s). Win10, GPO, interface-alias, service-hardening, and EnforcementStatus checks pending |
+| [0009](0009-firewall-read-path.md) | D9 | Firewall read path: ActiveStore, non-elevated; bulk inventory + per-rule restricted filters | **Accepted** (v0.1 direction) | **Implemented in M1.3** (production collector, streaming). Measured full scan about 29-35 s, so **N-04 (10 s) exceeded**. Win10, GPO, service-hardening, and EnforcementStatus checks pending; interface-alias access verified on TE-1 |
 | [0010](0010-executable-hashing.md) | D10 | Executable hashing off by default | Proposed | |
 | [0011](0011-change-rollback-model.md) | D11 | Rule-change rollback model (v0.4) | Proposed | |
 | [0012](0012-native-component-language.md) | D12 | Privileged helper/service language | Proposed (deferred) | Decided at v0.4 |
