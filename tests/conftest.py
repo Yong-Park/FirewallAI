@@ -14,6 +14,8 @@ from typing import Any
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# Make shared test helpers (e.g. rule_builders) importable from any test sub-directory.
+sys.path.insert(0, str(Path(__file__).parent))
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

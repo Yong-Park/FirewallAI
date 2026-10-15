@@ -33,8 +33,76 @@ class PowerShellRunner:                            # windows/powershell_runner.p
 **CLI:** `firewallai profiles [--json] [--fixture PATH]`. Exit codes: 0 complete, 1 failed, 2 usage error, 3 partial.
 **GUI:** `firewallai-gui [--fixture PATH]`. Collection runs in a `QThreadPool` worker and results come back through Qt signals.
 
+## Implemented in M1.3 (2026-10-14): read-only ActiveStore rules ([ADR 0009](../adr/0009-firewall-read-path.md))
+
+**Core** (`firewallai.core.rules`, `firewallai.core.evidence`)
+- **`FirewallRule`** (frozen). Each of its 7 filters (application, service, security, port, address, interface_type, interface) is a **`FilterResult[T]`** in exactly one state:
+  - `COLLECTED` (value);
+  - `NOT_COLLECTED` (reason: `pending`, `not_requested`, `cancelled`, `phase_failed`, `missing_from_source`);
+  - `UNREADABLE` (structured `CollectorError`).
+
+  **There is no default value**: a missing filter is never "Any".
+- **Typed tokens.** Ports, addresses, and ICMP types are parsed into `ANY | NUMBER | RANGE | KEYWORD | ADDRESS | UNKNOWN`. Unrecognized values become `UNKNOWN`, never `ANY`.
+- **Rule ID scheme `h1`:** `fw_rule:h1-` + the first 16 hex chars of SHA-256(raw Windows rule ID).
+  - The raw ID is kept in `instance_id`, which is host-sensitive.
+  - On a 64-bit prefix collision, the affected rules use the full 64-hex digest.
+  - Duplicate raw IDs are excluded and reported, never merged.
+  - IDs were verified identical across scans on TE-1.
+- **Evidence guard:** `evidence_for_verdict(rule) -> CompleteRuleEvidence | IncompleteEvidence(reasons)`. Any non-collected filter, unknown token, unknown policy source, non-`any` dynamic target or transport, or dynamic keyword addresses yields `IncompleteEvidence`.
+  - **Future verdict code may only consume `CompleteRuleEvidence`.**
+  - No verdicts exist in M1.3.
+- `RuleCollection` holds rules, `total_in_source`, `detail_requested`, `detail_complete`, and `limitations` (`ScanLimitation` codes, always including local-policy-only, WFP filters not observable, service hardening not evaluated, GPO merge unverified, and enforcement status uninterpreted).
+
+**Runner streaming mode** (`collectors.windows.powershell_runner`, opt-in, `PowerShellScript.streaming=True`)
+- Protocol: zero or more `{"type":"event","data":…}` lines, then exactly one `{"type":"result",…}` line, then EOF.
+- The script body calls `FwaiEmit $obj` to emit events.
+- `PowerShellRunner.run_stream(script, params, *, source, on_event, cancel)`.
+- Limits:
+  - per-line cap and total cap, both enforced in the reader thread;
+  - an event-count cap;
+  - a timeout and cancellation;
+  - the child process is always killed and reaped;
+  - schema violations, truncation, and non-UTF-8 become structured errors.
+- The non-streaming path is unchanged.
+
+**Collectors**
+```python
+class FirewallRuleCollector(Protocol):
+    @property
+    def source_id(self) -> str: ...
+    def collect_rules(self, *, detail: bool = True,
+                      observer: RuleCollectionObserver | None = None,
+                      cancel: threading.Event | None = None) -> CollectorResult[RuleCollection]: ...
+
+class RuleCollectionObserver(Protocol):          # called on the collecting (worker) thread
+    def inventory_ready(self, rules: tuple[FirewallRule, ...]) -> None: ...
+    def detail_progress(self, done: int, total: int, updated: tuple[FirewallRule, ...]) -> None: ...
+```
+- `WindowsFirewallRuleCollector` runs **one** streaming PowerShell process (`FIREWALL_RULES`):
+  - first, an inventory event (rules plus bulk application, service, and security filters);
+  - then detail events in 100-rule chunks (per-rule port, address, interface-type, and interface-alias filters; **enabled inbound rules first**; every rule is still collected).
+- A process-wide `HEAVY_QUERY_LOCK` means a second concurrent collection returns `BUSY`.
+- `FixtureFirewallRuleCollector` replays fixture events, with optional delays and injected failures.
+- Both collectors go through the shared driver `collectors.rule_collection.collect_progressively` and the `RuleAssembler` (`collectors.windows.rule_mapping`).
+
+**App** (`app.rule_service`)
+- `RuleScanService.scan(detail=True, observer=None, cancel=None) -> RuleScanReport` returns: result, inventory and total seconds, **N-04 status** (`met` / `exceeded` / `not_evaluated`), an evidence summary, and elevation status.
+- N-04 is evaluated **only** for a complete full scan, measured end to end.
+- `rules_report_to_dict()` produces JSON schema **`firewallai.rules/1`**. It includes a note that the export may contain host-sensitive data.
+
+**CLI:** `firewallai rules [--json] [--summary] [--inventory-only] [--fixture PATH]`
+- Progress goes to stderr.
+- Exit codes: 0 complete, 3 partial or incomplete, 1 failed.
+
+**GUI:** the **Rules** tab (`ui.rules_tab`, `ui.rules_model`)
+- Collect and Cancel buttons, progress bar, and phase text.
+- A sortable table in which uncollected filters show "Pending…", "Not collected (reason)", or "Unreadable".
+- An evidence column, timing with N-04 status, and the limitations panel.
+- Display rows (`RuleRow`) are **precomputed on the worker thread** and cached per rule. The model sorts precomputed keys.
+- `ui.app.prepare_gc_for_gui()` (`gc.freeze()` at startup) keeps full GC passes short.
+
 ## Collectors, planned (`collectors`, v0.1)
-Rules-collector read path: decided in [ADR 0009](../adr/0009-firewall-read-path.md) (Accepted v0.1 direction). It uses an ActiveStore bulk inventory plus per-rule restricted filters in a background process, with progressive collection evaluated in M1.3. Not implemented yet.
+The rules collector is **implemented** (M1.3, section above). The signatures below are the earlier planned sketch, kept for the network, process, and service collectors that remain planned.
 ```python
 class FirewallCollector(Protocol):
     def profiles(self) -> CollectorResult[list[FirewallProfile]]: ...

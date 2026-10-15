@@ -1,4 +1,4 @@
-"""Minimal main window: firewall profiles, read-only notice, limitations, responsive refresh."""
+"""Main window: Profiles tab (M1.1) and optional Rules tab (M1.3). Read-only; responsive."""
 
 from PySide6.QtCore import Qt, QThreadPool
 from PySide6.QtWidgets import (
@@ -9,12 +9,15 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QPushButton,
     QTableView,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from firewallai.app.profile_service import SCOPE_NOTE, ProfileReport, ProfileService
+from firewallai.app.rule_service import RuleScanService
 from firewallai.ui.profiles_model import ProfilesTableModel
+from firewallai.ui.rules_tab import RulesTab
 from firewallai.ui.worker import ProfileLoadSignals, ProfileLoadTask
 
 STATUS_IDLE = "Ready."
@@ -22,7 +25,13 @@ STATUS_LOADING = "Collecting firewall profiles…"
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, service: ProfileService, *, pool: QThreadPool | None = None) -> None:
+    def __init__(
+        self,
+        service: ProfileService,
+        *,
+        rule_service: RuleScanService | None = None,
+        pool: QThreadPool | None = None,
+    ) -> None:
         super().__init__()
         self._service = service
         self._pool = pool if pool is not None else QThreadPool.globalInstance()
@@ -31,8 +40,8 @@ class MainWindow(QMainWindow):
         self._signals.failed.connect(self._on_failed)
         self._loading = False
 
-        self.setWindowTitle("FirewallAI: Firewall Profiles (read-only)")
-        self.resize(900, 360)
+        self.setWindowTitle("FirewallAI (read-only)")
+        self.resize(1100, 520)
 
         self.notice = QLabel(SCOPE_NOTE)
         self.notice.setWordWrap(True)
@@ -63,9 +72,16 @@ class MainWindow(QMainWindow):
         layout.addLayout(top)
         layout.addWidget(self.table, stretch=1)
         layout.addWidget(self.limitations)
-        central = QWidget()
-        central.setLayout(layout)
-        self.setCentralWidget(central)
+        profiles_page = QWidget()
+        profiles_page.setLayout(layout)
+        self.tabs = QTabWidget()
+        self.tabs.setAccessibleName("FirewallAI views")
+        self.tabs.addTab(profiles_page, "&Profiles")
+        self.rules_tab: RulesTab | None = None
+        if rule_service is not None:
+            self.rules_tab = RulesTab(rule_service, pool=self._pool)
+            self.tabs.addTab(self.rules_tab, "R&ules")
+        self.setCentralWidget(self.tabs)
         self.statusBar().showMessage(STATUS_IDLE)
 
     @property

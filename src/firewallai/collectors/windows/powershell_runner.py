@@ -16,11 +16,12 @@ Security properties:
 import contextlib
 import json
 import os
+import queue
 import subprocess
 import sys
 import threading
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any
@@ -62,6 +63,44 @@ __FIREWALLAI_SCRIPT_BODY__
 [Console]::Out.Write((ConvertTo-Json -InputObject $FwaiEnvelope -Depth 8 -Compress))
 """
 
+# Streaming variant (opt-in, PowerShellScript.streaming=True). The body may call ``FwaiEmit $obj``
+# to write one JSON Lines event: {"type":"event","data":...}. The wrapper always ends with exactly
+# one result line: {"type":"result","ok":true,"data":...} or {"type":"result","ok":false,...}.
+STREAM_WRAPPER_TEMPLATE = r"""
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+function FwaiEmit($FwaiEvent) {
+    $FwaiLine = [ordered]@{ type = 'event'; data = $FwaiEvent }
+    [Console]::Out.WriteLine((ConvertTo-Json -InputObject $FwaiLine -Depth 8 -Compress))
+    [Console]::Out.Flush()
+}
+try {
+    $FwaiParams = $null
+    $FwaiRaw = [Console]::In.ReadToEnd()
+    if ($FwaiRaw) { $FwaiParams = ConvertFrom-Json -InputObject $FwaiRaw }
+    $FwaiData = & {
+__FIREWALLAI_SCRIPT_BODY__
+    }
+    $FwaiEnvelope = [ordered]@{ type = 'result'; ok = $true; data = $FwaiData }
+} catch {
+    $FwaiHresult = 0
+    if ($_.Exception -and $_.Exception.HResult) { $FwaiHresult = [int]$_.Exception.HResult }
+    $FwaiEnvelope = [ordered]@{
+        type = 'result'
+        ok = $false
+        error = [ordered]@{
+            category = [string]$_.CategoryInfo.Category
+            error_id = [string]$_.FullyQualifiedErrorId
+            hresult = $FwaiHresult
+        }
+    }
+}
+[Console]::Out.WriteLine((ConvertTo-Json -InputObject $FwaiEnvelope -Depth 8 -Compress))
+[Console]::Out.Flush()
+"""
+
 FORBIDDEN_ARGUMENTS = frozenset({"-executionpolicy", "-ep", "-encodedcommand", "-enc", "-file"})
 BASE_ARGUMENTS = ("-NoProfile", "-NonInteractive", "-NoLogo", "-Command")
 
@@ -82,6 +121,9 @@ class PowerShellScript:
     allowed_commands: frozenset[str]
     timeout_s: float = 30.0
     max_output_bytes: int = 4 * 1024 * 1024
+    streaming: bool = False  # JSON Lines events via FwaiEmit (use PowerShellRunner.run_stream)
+    max_line_bytes: int = 1024 * 1024  # streaming only: cap per JSON line
+    max_events: int = 10_000  # streaming only: cap on event lines
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,7 +170,8 @@ def render_script(script: PowerShellScript) -> str:
     """Insert a constant script body into the constant wrapper."""
     if _BODY_MARKER in script.body:
         raise ValueError("script body must not contain the wrapper token")
-    return WRAPPER_TEMPLATE.replace(_BODY_MARKER, script.body)
+    template = STREAM_WRAPPER_TEMPLATE if script.streaming else WRAPPER_TEMPLATE
+    return template.replace(_BODY_MARKER, script.body)
 
 
 def build_environment(system_dir: Path, base: Mapping[str, str] | None = None) -> dict[str, str]:
@@ -155,6 +198,24 @@ def _read_limited(
             return
         sink.append(chunk)
         total += len(chunk)
+
+
+def _drain_stderr(stream: IO[bytes], limit: int, sink: list[bytes]) -> None:
+    """Keep up to ``limit`` bytes of stderr, then keep READING and discard the rest.
+
+    Stopping at the cap would let a chatty child block on a full stderr pipe until the timeout
+    (found in the M1.3 security review). stderr is never parsed or shown (it is localized and
+    may contain host data); only its presence matters.
+    """
+    kept = 0
+    with contextlib.suppress(OSError, ValueError):
+        while True:
+            chunk = stream.read(65536)
+            if not chunk:
+                return
+            if kept < limit:
+                sink.append(chunk[: limit - kept])
+                kept += min(len(chunk), limit - kept)
 
 
 def _write_and_close(stream: IO[bytes], payload: bytes) -> None:
@@ -188,7 +249,6 @@ def execute(
     out_chunks: list[bytes] = []
     err_chunks: list[bytes] = []
     out_overflow = threading.Event()
-    err_overflow = threading.Event()
     threads = [
         threading.Thread(target=_write_and_close, args=(proc.stdin, stdin_bytes), daemon=True),
         threading.Thread(
@@ -197,8 +257,8 @@ def execute(
             daemon=True,
         ),
         threading.Thread(
-            target=_read_limited,
-            args=(proc.stderr, _STDERR_CAP_BYTES, err_chunks, err_overflow),
+            target=_drain_stderr,
+            args=(proc.stderr, _STDERR_CAP_BYTES, err_chunks),
             daemon=True,
         ),
     ]
@@ -245,8 +305,17 @@ def interpret(result: ExecResult, *, source: str) -> RunOutcome:
         )
     try:
         envelope = json.loads(text)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, RecursionError):
         return fail(CollectorErrorCode.PARSE_ERROR, "stdout is not a JSON envelope")
+    return interpret_envelope(envelope, source=source)
+
+
+def interpret_envelope(envelope: JsonValue, *, source: str) -> RunOutcome:
+    """Interpret a decoded result envelope (shared by the buffered and streaming paths)."""
+
+    def fail(code: CollectorErrorCode, detail: str) -> RunOutcome:
+        return RunOutcome(error=CollectorError(code=code, source=source, detail=detail[:300]))
+
     if not isinstance(envelope, dict) or "ok" not in envelope:
         return fail(CollectorErrorCode.PARSE_ERROR, "unexpected envelope shape")
     if envelope["ok"] is True:
@@ -312,3 +381,193 @@ class PowerShellRunner:
             env=build_environment(self._system_dir),
         )
         return interpret(result, source=source)
+
+    def run_stream(
+        self,
+        script: PowerShellScript,
+        params: Mapping[str, JsonValue] | None = None,
+        *,
+        source: str,
+        on_event: Callable[[JsonValue], None],
+        cancel: threading.Event | None = None,
+    ) -> RunOutcome:
+        """Run a registered streaming script; deliver each validated event to ``on_event``.
+
+        ``on_event`` runs on the calling thread. If it raises, the child process is killed and
+        the exception propagates.
+        """
+        if not script.streaming:
+            raise ValueError("run_stream requires a streaming script")
+        return execute_stream(
+            self.build_args(script),
+            self.encode_params(params),
+            script=script,
+            source=source,
+            on_event=on_event,
+            cancel=cancel,
+            env=build_environment(self._system_dir),
+        )
+
+
+# --- streaming execution ----------------------------------------------------------------------
+
+_Line = tuple[str, bytes]  # ("line" | "too_long" | "too_large" | "eof", payload)
+
+
+def _read_lines(
+    stream: IO[bytes],
+    max_line_bytes: int,
+    max_total_bytes: int,
+    out: "queue.Queue[_Line]",
+) -> None:
+    """Reader thread: push lines to ``out``.
+
+    Enforces the per-line AND total caps itself, so memory stays bounded even if the consumer is
+    slow, and the reader never blocks on a full queue after the process is killed.
+    """
+    total = 0
+    try:
+        while True:
+            line = stream.readline(max_line_bytes + 1)
+            if not line:
+                break
+            if len(line) > max_line_bytes and not line.endswith(b"\n"):
+                out.put(("too_long", b""))
+                return
+            total += len(line)
+            if total > max_total_bytes:
+                out.put(("too_large", b""))
+                return
+            out.put(("line", line))
+    except (OSError, ValueError):
+        pass  # pipe closed because the process was killed
+    out.put(("eof", b""))
+
+
+def execute_stream(
+    args: list[str],
+    stdin_bytes: bytes,
+    *,
+    script: PowerShellScript,
+    source: str,
+    on_event: Callable[[JsonValue], None],
+    cancel: threading.Event | None = None,
+    env: Mapping[str, str] | None = None,
+) -> RunOutcome:
+    """Run ``args`` (shell=False) and validate a JSON Lines stream with hard limits.
+
+    Protocol: zero or more ``{"type":"event","data":...}`` lines, then exactly one
+    ``{"type":"result",...}`` line, then EOF. Anything else is a structured error.
+    """
+
+    def fail(code: CollectorErrorCode, detail: str) -> RunOutcome:
+        return RunOutcome(error=CollectorError(code=code, source=source, detail=detail[:300]))
+
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    proc = subprocess.Popen(
+        args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=False,
+        env=None if env is None else dict(env),
+        creationflags=creationflags,
+    )
+    assert proc.stdin and proc.stdout and proc.stderr  # noqa: S101 - PIPE guarantees these
+    lines: queue.Queue[_Line] = queue.Queue()  # bounded by the reader's total cap
+    err_chunks: list[bytes] = []
+    threads = [
+        threading.Thread(target=_write_and_close, args=(proc.stdin, stdin_bytes), daemon=True),
+        threading.Thread(
+            target=_read_lines,
+            args=(proc.stdout, script.max_line_bytes, script.max_output_bytes, lines),
+            daemon=True,
+        ),
+        threading.Thread(
+            target=_drain_stderr,
+            args=(proc.stderr, _STDERR_CAP_BYTES, err_chunks),
+            daemon=True,
+        ),
+    ]
+    for thread in threads:
+        thread.start()
+
+    deadline = time.monotonic() + script.timeout_s
+    events = 0
+    result: RunOutcome | None = None
+    outcome: RunOutcome | None = None
+    try:
+        while outcome is None:
+            if cancel is not None and cancel.is_set():
+                outcome = fail(CollectorErrorCode.CANCELLED, "cancelled by the caller")
+                break
+            if time.monotonic() >= deadline:
+                outcome = fail(CollectorErrorCode.TIMEOUT, "process killed after timeout")
+                break
+            try:
+                kind, raw = lines.get(timeout=0.05)
+            except queue.Empty:
+                continue
+            if kind == "too_long":
+                outcome = fail(CollectorErrorCode.OUTPUT_TOO_LARGE, "stream line exceeded cap")
+                break
+            if kind == "too_large":
+                outcome = fail(CollectorErrorCode.OUTPUT_TOO_LARGE, "stream exceeded total cap")
+                break
+            if kind == "eof":
+                if result is not None:
+                    outcome = result
+                else:
+                    try:
+                        code: int | None = proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        code = None  # stdout closed but the process is still running
+                    outcome = fail(
+                        CollectorErrorCode.EXECUTION_FAILED
+                        if code != 0
+                        else CollectorErrorCode.PARSE_ERROR,
+                        f"stream ended without a result line; exit_code={code}",
+                    )
+                break
+            try:
+                text = raw.decode("utf-8", errors="strict").lstrip("\ufeff").strip()
+            except UnicodeDecodeError:
+                outcome = fail(CollectorErrorCode.PARSE_ERROR, "stream line is not UTF-8")
+                break
+            if not text:
+                continue
+            if result is not None:
+                outcome = fail(CollectorErrorCode.PARSE_ERROR, "data after the result line")
+                break
+            try:
+                message = json.loads(text)
+            except (json.JSONDecodeError, RecursionError):
+                outcome = fail(CollectorErrorCode.PARSE_ERROR, "stream line is not JSON")
+                break
+            if not isinstance(message, dict):
+                outcome = fail(CollectorErrorCode.PARSE_ERROR, "stream line is not an object")
+                break
+            line_type = message.get("type")
+            if line_type == "event" and set(message) == {"type", "data"}:
+                events += 1
+                if events > script.max_events:
+                    outcome = fail(CollectorErrorCode.OUTPUT_TOO_LARGE, "too many stream events")
+                    break
+                on_event(message["data"])
+            elif line_type == "result":
+                body = {k: v for k, v in message.items() if k != "type"}
+                result = interpret_envelope(body, source=source)
+            else:
+                outcome = fail(CollectorErrorCode.PARSE_ERROR, "unexpected stream line schema")
+                break
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            proc.wait(timeout=10)
+        for stream in (proc.stdout, proc.stderr):
+            with contextlib.suppress(OSError):
+                stream.close()
+        for thread in threads:
+            thread.join(timeout=5)
+    return outcome

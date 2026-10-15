@@ -161,3 +161,30 @@ Decided by the human after reviewing the [M1.2 report](../research/2026-10-14-d9
 | Root cause of bulk-enumeration denial | Undocumented by Microsoft; current explanation is an interpretation |
 
 Any change to the accepted architecture needs a new ADR that supersedes this one.
+
+## Implementation notes (M1.3, 2026-10-14). The accepted decision is unchanged
+
+The production collector implements the accepted architecture. Details are in [interfaces.md](../architecture/interfaces.md) ("Implemented in M1.3"). Everything below was measured on TE-1, read-only and non-elevated.
+
+**Step 0 spike (before any production code):**
+- Streaming JSON Lines from one PowerShell process works: progress arrived about every 1.4 s, with a clean exit.
+- **Interface-alias filters are readable per rule**: 1,586 of 1,586 with 0 errors. This resolves the earlier "interface alias pending" item for TE-1.
+- 430 rules (429 of them enabled inbound) are restricted to one of 3 named interfaces. Treating them as "any interface" would overstate exposure, so aliases are collected and kept as host-sensitive.
+- SHA-256-derived rule IDs were identical across two inventories (1,586 unique). The raw IDs contain spaces (264), braces (1,038), and paths/backslashes (260), which confirms they are host-sensitive.
+
+**Production results** (`firewallai rules`, live, several runs):
+
+| Metric | Result |
+|---|---|
+| Rules collected | 1,586 of 1,586; all 7 filter types collected for every rule; 0 errors; detail complete |
+| Evidence | 1,567 complete; **19 incomplete** (non-`any` dynamic target/transport: WiFi-Direct/Proximity/empty; never verdict-eligible) |
+| **Full scan (inventory + all detail), end to end** | **about 29.4–34.9 s** across runs. **N-04 (10 s) EXCEEDED by about 19–25 s (about 3×)**, reported in the CLI, GUI, report, and HANDOFF |
+| Inventory (first rows visible) | about 4.6–6.3 s |
+| Streamed output | about 2.4 MB in total (cap 16 MB); largest line about 1.5 MB (cap 8 MB) |
+| GUI responsiveness during a real scan | max heartbeat gap **35–49 ms** after the fixes (439 ms before; see HANDOFF) |
+
+**What does not change:**
+- N-04 is still the target and is not met.
+- Progressive collection makes the GUI usable early. It does **not** count as N-04 compliance.
+- The compatibility items remain open (Windows 10, Group Policy, service hardening, `EnforcementStatus` semantics).
+- On TE-1, per-rule interface-alias access is now verified.
