@@ -140,6 +140,7 @@ class FilterResult[T](BaseModel):
 class ApplicationFilter(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    # None = any. ``package == "*"`` means "app packages only" (a restriction, not "any").
     program: str | None = Field(default=None, max_length=2048, json_schema_extra=_SENSITIVE)
     package: str | None = Field(default=None, max_length=512, json_schema_extra=_SENSITIVE)
 
@@ -147,6 +148,7 @@ class ApplicationFilter(BaseModel):
 class ServiceFilter(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    # None = any. ``service == "*"`` means "services only" (a restriction, not "any").
     service: str | None = Field(default=None, max_length=512, json_schema_extra=_SENSITIVE)
 
 

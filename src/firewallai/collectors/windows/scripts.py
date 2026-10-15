@@ -200,4 +200,29 @@ FIREWALL_RULES = PowerShellScript(
 """,
 )
 
-REGISTERED_SCRIPTS: tuple[PowerShellScript, ...] = (FIREWALL_PROFILES, FIREWALL_RULES)
+# Services per process (M1.4, human decision Q2): names of services that currently run in a
+# process, used to describe service-scoped rules. Read-only CIM query against the local machine
+# (no -ComputerName, no network). Only Name and ProcessId are requested.
+WIN32_SERVICES = PowerShellScript(
+    name="win32_services",
+    allowed_commands=frozenset({"Get-CimInstance"}),
+    timeout_s=15.0,
+    max_output_bytes=1024 * 1024,
+    body=r"""
+        $FwaiProps = @('Name', 'ProcessId')
+        $FwaiSvc = @(Get-CimInstance -ClassName Win32_Service -Property $FwaiProps)
+        [ordered]@{
+            services = @(foreach ($s in $FwaiSvc) {
+                if ([long]$s.ProcessId -gt 0) {
+                    [ordered]@{ name = [string]$s.Name; pid = [long]$s.ProcessId }
+                }
+            })
+        }
+""",
+)
+
+REGISTERED_SCRIPTS: tuple[PowerShellScript, ...] = (
+    FIREWALL_PROFILES,
+    FIREWALL_RULES,
+    WIN32_SERVICES,
+)

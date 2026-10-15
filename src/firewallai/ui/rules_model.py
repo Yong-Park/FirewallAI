@@ -11,12 +11,9 @@ GUI thread stalled it for 250-350 ms (measured on TE-1, M1.3).
 from dataclasses import dataclass
 from typing import Any
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
-
 from firewallai.core.evidence import IncompleteEvidence, evidence_for_verdict
 from firewallai.core.rules import FilterResult, FilterState, FirewallRule, NotCollectedReason
-
-_Index = QModelIndex | QPersistentModelIndex
+from firewallai.ui.table_model import PrecomputedTableModel
 
 COLUMNS: tuple[str, ...] = (
     "Name",
@@ -97,6 +94,10 @@ class RuleRow:
     texts: tuple[str, ...]
     sort_keys: tuple[str, ...]
 
+    @property
+    def key(self) -> str:
+        return self.rule_id
+
 
 def rows_for(rules: tuple[FirewallRule, ...]) -> tuple[RuleRow, ...]:
     """Build display rows. Call on a worker thread, not the GUI thread."""
@@ -107,76 +108,11 @@ def rows_for(rules: tuple[FirewallRule, ...]) -> tuple[RuleRow, ...]:
     return tuple(out)
 
 
-class RulesTableModel(QAbstractTableModel):
-    """Plain list model over precomputed rows; sorting is a Python sort of precomputed keys."""
+class RulesTableModel(PrecomputedTableModel[RuleRow]):
+    """Rules over precomputed rows (see ``firewallai.ui.table_model``)."""
 
     def __init__(self) -> None:
-        super().__init__()
-        self._rows: list[RuleRow] = []
-        self._row_by_id: dict[str, int] = {}
-        self._sort: tuple[int, Qt.SortOrder] | None = None
-
-    def _reindex(self) -> None:
-        self._row_by_id = {r.rule_id: i for i, r in enumerate(self._rows)}
-
-    def _apply_sort(self) -> None:
-        if self._sort is not None:
-            column, order = self._sort
-            self._rows.sort(
-                key=lambda r: r.sort_keys[column],
-                reverse=order == Qt.SortOrder.DescendingOrder,
-            )
-        self._reindex()
-
-    def set_rows(self, rows: tuple[RuleRow, ...]) -> None:
-        self.beginResetModel()
-        self._rows = list(rows)
-        self._apply_sort()
-        self.endResetModel()
-
-    def update_rows(self, rows: tuple[RuleRow, ...]) -> None:
-        """Replace rows in place (batched per detail chunk); unknown IDs are ignored."""
-        changed = []
-        for row in rows:
-            index = self._row_by_id.get(row.rule_id)
-            if index is not None:
-                self._rows[index] = row
-                changed.append(index)
-        if changed:
-            self.dataChanged.emit(
-                self.index(min(changed), 0), self.index(max(changed), len(COLUMNS) - 1)
-            )
+        super().__init__(COLUMNS)
 
     def row_id(self, row: int) -> str:
-        return self._rows[row].rule_id
-
-    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
-        self.layoutAboutToBeChanged.emit()
-        self._sort = (column, order)
-        self._apply_sort()
-        self.layoutChanged.emit()
-
-    def rowCount(self, parent: _Index = QModelIndex()) -> int:  # noqa: B008, N802 - Qt API
-        return 0 if parent.isValid() else len(self._rows)
-
-    def columnCount(self, parent: _Index = QModelIndex()) -> int:  # noqa: B008, N802 - Qt API
-        return 0 if parent.isValid() else len(COLUMNS)
-
-    def data(self, index: _Index, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-        if not index.isValid() or role not in (
-            Qt.ItemDataRole.DisplayRole,
-            Qt.ItemDataRole.AccessibleTextRole,
-            Qt.ItemDataRole.ToolTipRole,
-        ):
-            return None
-        return self._rows[index.row()].texts[index.column()]
-
-    def headerData(  # noqa: N802 - Qt API
-        self,
-        section: int,
-        orientation: Qt.Orientation,
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> Any:
-        if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
-            return COLUMNS[section]
-        return None
+        return self.row_key(row)

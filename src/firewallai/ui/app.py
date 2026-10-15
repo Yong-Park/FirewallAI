@@ -8,6 +8,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
+from firewallai.app.endpoint_service import create_endpoint_scan_service
 from firewallai.app.profile_service import create_profile_service
 from firewallai.app.rule_service import create_rule_scan_service
 from firewallai.ui.main_window import MainWindow
@@ -35,11 +36,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="firewallai-gui")
     parser.add_argument("--fixture", type=Path, default=None)
     parser.add_argument("--rules-fixture", type=Path, default=None)
+    parser.add_argument("--endpoints-fixture", type=Path, default=None)
     args, qt_args = parser.parse_known_args(argv)
     app = QApplication([sys.argv[0], *qt_args])
     window = MainWindow(
         create_profile_service(fixture=args.fixture),
         rule_service=create_rule_scan_service(fixture=args.rules_fixture),
+        endpoint_service=create_endpoint_scan_service(fixture=args.endpoints_fixture),
     )
     prepare_gc_for_gui()
     window.show()

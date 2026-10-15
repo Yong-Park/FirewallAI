@@ -17,6 +17,7 @@ classifiers = [
 # PySide6-Essentials = the official core subset of PySide6 (QtCore/QtGui/QtWidgets, no WebEngine/Addons):
 # smaller install and attack surface than the "pyside6" meta-package.
 dependencies = [
+    "psutil==7.2.2",
     "pydantic==2.13.5",
     "pyside6-essentials==6.11.2",
 ]
@@ -76,10 +77,22 @@ strict = true
 mypy_path = "src"
 packages = ["firewallai"]
 warn_unreachable = true
+# Calls into psutil's untyped API are allowed (and only those); see the psutil override below.
+untyped_calls_exclude = ["psutil"]
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+# psutil (M1.4) ships no type information (no py.typed). Rather than skipping it
+# (ignore_missing_imports) or adding a stub package, mypy reads psutil's own source.
+# Only psutil is affected; all psutil values are validated by strict pydantic models
+# (collectors/endpoint_assembly.py) before use. Effect: psutil's API is typed Any; all
+# first-party strict checks still apply. Accepted by the human with ADR 0022
+# (2026-10-15); rationale and limits in docs/adr/0022-psutil-endpoint-collection.md.
+[[tool.mypy.overrides]]
+module = ["psutil", "psutil.*"]
+follow_untyped_imports = true
 
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
@@ -119,6 +132,22 @@ name = "Only the UI layer may import Qt"
 type = "forbidden"
 source_modules = ["firewallai.core", "firewallai.collectors", "firewallai.app", "firewallai.cli"]
 forbidden_modules = ["PySide6"]
+
+[[tool.importlinter.contracts]]
+name = "psutil only in the Windows endpoint collector (M1.4)"
+type = "forbidden"
+source_modules = [
+    "firewallai.core",
+    "firewallai.ui",
+    "firewallai.cli",
+    "firewallai.collectors.fake",
+    "firewallai.collectors.endpoint_assembly",
+    "firewallai.collectors.windows.firewall_rules",
+    "firewallai.collectors.windows.firewall_profiles",
+    "firewallai.collectors.windows.powershell_runner",
+]
+forbidden_modules = ["psutil"]
+allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "No network modules anywhere in v0.1 (SB-05)"

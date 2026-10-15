@@ -1,4 +1,4 @@
-"""Main window: Profiles tab (M1.1) and optional Rules tab (M1.3). Read-only; responsive."""
+"""Main window: Profiles (M1.1), optional Rules (M1.3) and Network (M1.4) tabs. Read-only."""
 
 from PySide6.QtCore import Qt, QThreadPool
 from PySide6.QtWidgets import (
@@ -14,8 +14,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from firewallai.app.endpoint_service import EndpointScanService
 from firewallai.app.profile_service import SCOPE_NOTE, ProfileReport, ProfileService
 from firewallai.app.rule_service import RuleScanService
+from firewallai.ui.network_tab import NetworkTab
 from firewallai.ui.profiles_model import ProfilesTableModel
 from firewallai.ui.rules_tab import RulesTab
 from firewallai.ui.worker import ProfileLoadSignals, ProfileLoadTask
@@ -30,6 +32,7 @@ class MainWindow(QMainWindow):
         service: ProfileService,
         *,
         rule_service: RuleScanService | None = None,
+        endpoint_service: EndpointScanService | None = None,
         pool: QThreadPool | None = None,
     ) -> None:
         super().__init__()
@@ -81,6 +84,12 @@ class MainWindow(QMainWindow):
         if rule_service is not None:
             self.rules_tab = RulesTab(rule_service, pool=self._pool)
             self.tabs.addTab(self.rules_tab, "R&ules")
+        self.network_tab: NetworkTab | None = None
+        if endpoint_service is not None:
+            self.network_tab = NetworkTab(endpoint_service, pool=self._pool)
+            self.tabs.addTab(self.network_tab, "&Network")
+            if self.rules_tab is not None:
+                self.rules_tab.collection_ready.connect(self.network_tab.set_rule_collection)
         self.setCentralWidget(self.tabs)
         self.statusBar().showMessage(STATUS_IDLE)
 
