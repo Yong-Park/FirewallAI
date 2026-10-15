@@ -101,8 +101,49 @@ class RuleCollectionObserver(Protocol):          # called on the collecting (wor
 - Display rows (`RuleRow`) are **precomputed on the worker thread** and cached per rule. The model sorts precomputed keys.
 - `ui.app.prepare_gc_for_gui()` (`gc.freeze()` at startup) keeps full GC passes short.
 
+## Implemented in M1.4 (2026-10-15): local endpoints, processes, descriptive correlation
+
+**Core** (`firewallai.core.endpoints`, `firewallai.core.correlation`)
+- **`Endpoint`** (frozen): protocol (`tcp`/`udp`), family (`ipv4`/`ipv6`), kind, TCP state, local and remote address/port, bind scope, `dual_stack_unknown`, and `process`.
+  - Kinds: `listening` (TCP `LISTEN`), `bound` (UDP: never "listening"), `connection` (any other TCP state). TCP states are preserved as reported; unknown ones become `UNRECOGNIZED`.
+  - Bind scope is descriptive only: `loopback`, `all_interfaces`, `link_local`, `specific`, `unparseable`.
+- **`ProcessInfo`**: `attribution` collected, or unavailable with a reason (`no_pid`, `system_pseudo_process`, `attribution_unverified`, `process_exited`, `not_collected`); an unattributed process can never carry details. `name`, `image_path`, and `services` are **`Observed[T]`** values (collected, or unavailable with a reason such as `access_denied`, `lookup_failed`, `invalid_value`). No defaults.
+- **`EndpointSnapshot`**: endpoints (cap 65,536; more is an error, never a silent truncation), `services_collected`, `process_lookup_complete`, limitations (always: local socket facts only, profile mapping deferred, snapshot not atomic), and phase timings.
+- **`display_safe(text)`** escapes control, format (bidi, zero-width), and surrogate characters for display.
+- **Correlation** (SB-20): `RuleIndex(collection, env).correlate(endpoint) -> EndpointCorrelation` with `related` (identity filters consistent, no network conditions), `related_with_conditions` (identity consistent; profile/interface/remote/IPsec conditions NOT evaluated), `cannot_evaluate`, and a `not_related` count, and `relate(rule, endpoint, env)` per rule. Only listening/bound endpoints are evaluated; connections are `not_applicable`, loopback-bound endpoints `cannot_evaluate`. Rules: see SB-20 in [security-boundaries.md](security-boundaries.md).
+
+**Collectors**
+```python
+class EndpointCollector(Protocol):
+    @property
+    def source_id(self) -> str: ...
+    def collect_endpoints(self, *, cancel: threading.Event | None = None) -> CollectorResult[EndpointSnapshot]: ...
+```
+- `WindowsEndpointCollector` (`collectors.windows.network_endpoints`; dependency decision: accepted [ADR 0022](../adr/0022-psutil-endpoint-collection.md)):
+  1. starts the registered `WIN32_SERVICES` script (CIM `Win32_Service`, Name and ProcessId only) through the audited runner on a background thread;
+  2. reads the socket table with `psutil.net_connections("inet")`;
+  3. reads name and image path per PID with `psutil.Process` (no command line, owner, environment, or creation time);
+  4. reads the socket table again: a socket/PID pair missing from the second table is `attribution_unverified`. This is a **best-effort** PID-reuse check, not proof of process identity; residual risks are documented in `collectors.endpoint_assembly` and reported with every snapshot (`attribution_best_effort`);
+  5. joins the service thread (bounded by the script timeout).
+  - A service-lookup failure gives a partial result with all socket data and `services: lookup_failed`. Cancellation during process lookup gives partial data with `not_collected` processes.
+  - `ENDPOINT_SNAPSHOT_LOCK`: single-flight (`BUSY`); it is not the M1.3 rule-scan lock.
+- `FixtureEndpointCollector` validates the same raw shape (`RawEndpointSnapshot`) and uses the same assembler.
+
+**App** (`app.endpoint_service`)
+- `EndpointScanService.scan(cancel=None) -> EndpointScanReport` with the **M1.4 snapshot target** (< 1 s, end to end, including the service lookup): `met` / `exceeded` / `not_evaluated` (failed, cancelled, or service lookup failed). It is separate from N-04 and never combined with it.
+- `endpoints_report_to_dict()` produces JSON schema **`firewallai.endpoints/1`**, including remote addresses, with a privacy note.
+- `build_rule_index(collection)` expands only system-wide path variables (`SystemRoot`, `ProgramFiles`, …) for rule program paths; user-specific variables stay unresolved (`cannot_evaluate`).
+
+**CLI:** `firewallai endpoints [--json] [--summary] [--listening] [--show-remote] [--fixture PATH]`
+- Remote addresses are **hidden** in text output unless `--show-remote`. JSON includes them and prints a privacy note to stderr.
+- Exit codes: 0 complete, 3 partial, 1 failed.
+
+**GUI:** the **Network** tab (`ui.network_tab`, `ui.network_model`, shared `ui.table_model`)
+- Collect and Cancel, a busy indicator, a filter (listening TCP and bound UDP by default; TCP connections; all), a sortable table with explicit process states, timing with the target status, and limitations.
+- The related-rules panel uses only a rule collection published by the Rules tab (`RulesTab.collection_ready`); without one it says so, and it never starts a rule scan. Indexing and correlation run on workers.
+
 ## Collectors, planned (`collectors`, v0.1)
-The rules collector is **implemented** (M1.3, section above). The signatures below are the earlier planned sketch, kept for the network, process, and service collectors that remain planned.
+The rules (M1.3) and endpoint/process/service (M1.4) collectors are **implemented** (sections above). The signatures below are the earlier planned sketch, kept for reference; `NetworkCollector`, `ProcessCollector`, and `ServiceCollector` were implemented as the single `EndpointCollector`.
 ```python
 class FirewallCollector(Protocol):
     def profiles(self) -> CollectorResult[list[FirewallProfile]]: ...

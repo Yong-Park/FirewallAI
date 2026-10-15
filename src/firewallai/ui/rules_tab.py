@@ -82,6 +82,10 @@ class RuleScanTask(QRunnable):
 
 
 class RulesTab(QWidget):
+    # Emitted with the RuleCollection of a finished scan (complete or partial); used by the
+    # Network tab for descriptive correlation (M1.4). Never triggers another scan.
+    collection_ready = Signal(object)
+
     def __init__(self, service: RuleScanService, *, pool: QThreadPool | None = None) -> None:
         super().__init__()
         self._service = service
@@ -191,6 +195,8 @@ class RulesTab(QWidget):
 
     def _on_finished(self, report: RuleScanReport, rows: tuple[RuleRow, ...]) -> None:
         data = report.result.data
+        if data is not None:
+            self.collection_ready.emit(data)
         if data is not None:
             if self.model.rowCount() == len(rows):
                 self.model.update_rows(rows)  # final states (e.g. cancelled), no full reset

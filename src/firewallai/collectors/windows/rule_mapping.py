@@ -257,6 +257,13 @@ def _optional(value: str) -> str | None:
     return None if v == "" or v.lower() in (_ANY, "*") else v
 
 
+def _optional_keep_wildcard(value: str) -> str | None:
+    """Like ``_optional`` but keeps ``*``: for service and package filters ``*`` is a RESTRICTION
+    ("services only" / "app packages only"), not "Any" (M1.4 fix; SB-18)."""
+    v = value.strip()
+    return None if v == "" or v.lower() == _ANY else v
+
+
 # --- rule IDs with collision detection ---------------------------------------------------------
 
 
@@ -445,13 +452,15 @@ class RuleAssembler:
         if a is None:
             return self._missing()
         return FilterResult.collected(
-            ApplicationFilter(program=_optional(a.program), package=_optional(a.package))
+            ApplicationFilter(
+                program=_optional(a.program), package=_optional_keep_wildcard(a.package)
+            )
         )
 
     def _map_service(self, s: RawService | None, public: str) -> FilterResult[ServiceFilter]:
         if s is None:
             return self._missing()
-        return FilterResult.collected(ServiceFilter(service=_optional(s.service)))
+        return FilterResult.collected(ServiceFilter(service=_optional_keep_wildcard(s.service)))
 
     def _map_security(self, s: RawSecurity | None, public: str) -> FilterResult[SecurityFilter]:
         if s is None:

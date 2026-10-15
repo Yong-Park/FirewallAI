@@ -11,6 +11,14 @@ from pathlib import Path
 from typing import Any, TextIO
 
 from firewallai import __version__
+from firewallai.app.endpoint_service import (
+    ENDPOINT_SCOPE_NOTE,
+    ENDPOINTS_PRIVACY_NOTE,
+    EndpointScanReport,
+    create_endpoint_scan_service,
+    endpoints_report_to_dict,
+    summarize,
+)
 from firewallai.app.profile_service import (
     SCOPE_NOTE,
     ProfileReport,
@@ -23,6 +31,7 @@ from firewallai.app.rule_service import (
     create_rule_scan_service,
     rules_report_to_dict,
 )
+from firewallai.core.endpoints import Endpoint, EndpointKind, display_safe
 from firewallai.core.rules import FilterResult, FilterState, FirewallRule
 
 EXIT_OK = 0
@@ -56,6 +65,28 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     rules.add_argument(
         "--fixture", type=Path, default=None, help="Replay a recorded/synthetic event fixture."
+    )
+    endpoints = sub.add_parser(
+        "endpoints",
+        help="Show local listening/bound sockets and TCP connections with owning processes "
+        "(read-only; not a reachability assessment).",
+    )
+    endpoints.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON. It includes remote addresses: do not share it publicly.",
+    )
+    endpoints.add_argument("--summary", action="store_true", help="Print only the summary.")
+    endpoints.add_argument(
+        "--listening", action="store_true", help="Only listening TCP and bound UDP endpoints."
+    )
+    endpoints.add_argument(
+        "--show-remote",
+        action="store_true",
+        help="Show remote addresses of TCP connections (hidden by default; host-sensitive).",
+    )
+    endpoints.add_argument(
+        "--fixture", type=Path, default=None, help="Read a synthetic snapshot fixture."
     )
     return parser
 
@@ -167,6 +198,87 @@ def _rules_exit_code(report: RuleScanReport) -> int:
     return EXIT_OK
 
 
+# --- endpoints -----------------------------------------------------------------------------------
+
+HIDDEN = "<hidden>"
+
+
+def _process_cell(ep: Endpoint) -> str:
+    p = ep.process
+    if p.reason is not None:
+        return f"<{p.reason.value}>"
+    if p.name.value is not None:
+        return display_safe(p.name.value, 40)
+    return f"<{p.name.reason.value if p.name.reason else 'unavailable'}>"
+
+
+def _endpoint_line(ep: Endpoint, *, show_remote: bool) -> str:
+    if ep.remote_address is None:
+        remote = "-"
+    elif show_remote:
+        remote = f"{display_safe(ep.remote_address, 46)}:{ep.remote_port}"
+    else:
+        remote = HIDDEN
+    state = ep.tcp_state.value if ep.tcp_state is not None else "-"
+    pid = "-" if ep.process.pid is None else str(ep.process.pid)
+    local = f"{display_safe(ep.local_address, 46)}:{ep.local_port}"
+    return (
+        f"{ep.protocol.value:<4} {ep.family.value:<5} {ep.kind.value:<10} {state:<12} "
+        f"{local:<48} {remote:<48} {pid:>7} {_process_cell(ep)}"
+    )
+
+
+def _print_endpoints_text(
+    report: EndpointScanReport, out: TextIO, *, summary_only: bool, listening: bool, remote: bool
+) -> None:
+    data = report.result.data
+    out.write(f"{ENDPOINT_SCOPE_NOTE}\n\n")
+    if data is not None:
+        s = summarize(data)
+        out.write(
+            f"Endpoints: {s['total']} (listening TCP {s['listening_tcp']}, bound UDP "
+            f"{s['bound_udp']}, TCP connections {s['tcp_connections']}; "
+            + ", ".join(f"{k} {v}" for k, v in s["families"].items())
+            + ")\n"
+        )
+        out.write(
+            "Process attribution: "
+            + ", ".join(f"{k} {v}" for k, v in s["process_attribution"].items())
+            + "\n"
+        )
+        t = data.timings
+        services = "n/a" if t.services_s is None else f"{t.services_s:.2f} s (parallel)"
+        out.write(
+            f"Timing: sockets {t.sockets_s:.2f} s, processes {t.processes_s:.2f} s, "
+            f"services {services}; total {report.total_s:.2f} s\n"
+        )
+    out.write(report.target.describe() + "\n")
+    if data is not None:
+        out.write("\nLimitations:\n")
+        for lim in data.limitations:
+            out.write(f"  - {lim.code.value}: {lim.detail}\n")
+    for error in report.result.errors:
+        out.write(f"Error: {error.code.value} ({error.source}): {error.detail}\n")
+    if data is None or summary_only:
+        return
+    if not remote:
+        out.write("\nRemote addresses are hidden (use --show-remote to display them).\n")
+    out.write(
+        f"\n{'prot':<4} {'fam':<5} {'kind':<10} {'state':<12} {'local':<48} {'remote':<48} "
+        f"{'pid':>7} process\n"
+    )
+    for ep in data.endpoints:
+        if listening and ep.kind is EndpointKind.CONNECTION:
+            continue
+        out.write(_endpoint_line(ep, show_remote=remote) + "\n")
+
+
+def _endpoints_exit_code(report: EndpointScanReport) -> int:
+    if report.result.data is None:
+        return EXIT_FAILED
+    return EXIT_PARTIAL if report.result.partial else EXIT_OK
+
+
 def main(
     argv: Sequence[str] | None = None, *, out: TextIO | None = None, err: TextIO | None = None
 ) -> int:
@@ -200,6 +312,24 @@ def main(
         else:
             _print_rules_text(rule_report, stream, summary_only=args.summary)
         return _rules_exit_code(rule_report)
+    if args.command == "endpoints":
+        ep_report = create_endpoint_scan_service(fixture=args.fixture).scan()
+        if ep_report.elevated:
+            err_stream.write("Warning: running elevated is not needed.\n")
+        if args.json:
+            err_stream.write(f"Note: {ENDPOINTS_PRIVACY_NOTE}\n")
+            stream.write(
+                json.dumps(endpoints_report_to_dict(ep_report), indent=2, ensure_ascii=False) + "\n"
+            )
+        else:
+            _print_endpoints_text(
+                ep_report,
+                stream,
+                summary_only=args.summary,
+                listening=args.listening,
+                remote=args.show_remote,
+            )
+        return _endpoints_exit_code(ep_report)
     return 2  # pragma: no cover - argparse enforces a known command
 
 
