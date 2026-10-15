@@ -1,0 +1,104 @@
+# Minimal Windows CI (M1.5, human decision Q8). Runs on pull requests only.
+# - Least privilege: read-only token, no secrets, no artifact uploads, no releases, no deployments.
+# - Third-party actions are pinned to full commit SHAs (tag in the comment), each release at least
+#   two weeks old when pinned (2026-10-15).
+# - Windows integration tests (tests/integration) are NOT run here: GitHub-hosted Windows runners
+#   execute as an administrator, and those tests assert standard-user execution (SB-02). They run
+#   locally on TE-1. The frozen-bundle smoke tests (packaging/smoke) need a standard user for the
+#   same reason; CI builds and verifies the bundle instead.
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.12.21"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  checks:
+    name: Gates and tests (unit, security, UI)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+      - name: Lockfile check
+        run: uv lock --check
+      - name: Sync (frozen)
+        run: uv sync --frozen
+      - name: Ruff
+        run: uv run --frozen ruff check
+      - name: Format
+        run: uv run --frozen ruff format --check
+      - name: mypy (strict)
+        run: uv run --frozen mypy
+      - name: Import contracts
+        run: uv run --frozen lint-imports
+      - name: Tests (unit, security, UI)
+        run: uv run --frozen pytest -q -p no:cacheprovider tests/unit tests/security tests/ui
+      - name: Dependency audit (OSV; public package names and versions only)
+        run: uv audit --frozen
+
+  package:
+    name: Build and verify the portable bundle (not published)
+    needs: checks
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: false
+      - name: Isolated build environment (runtime + build group only)
+        env:
+          UV_PROJECT_ENVIRONMENT: .venv-build
+        run: uv sync --frozen --no-default-groups --group build
+      - name: SBOM (CycloneDX, runtime dependencies)
+        run: uv export --frozen --no-default-groups --format cyclonedx1.5 -o build/sbom.cdx.json
+      - name: Build (reproducible settings)
+        env:
+          PYTHONHASHSEED: "0"
+          SOURCE_DATE_EPOCH: "315532800"
+        run: .venv-build\Scripts\python.exe -s -P packaging\build.py --sbom build\sbom.cdx.json
+      - name: Verify the bundle
+        run: .venv-build\Scripts\python.exe -I packaging\verify_build.py dist
+      - name: Frozen CLI smoke (version and a synthetic fixture)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $v = & dist\FirewallAI\firewallai-cli.exe --version
+          if ($LASTEXITCODE -ne 0 -or $v -notmatch '^firewallai ') { throw "version check failed" }
+          $sock = @{ protocol = 'udp'; family = 'ipv4'; local_address = '192.0.2.10'; local_port = 5353; remote_address = $null; remote_port = $null; status = 'NONE'; pid = 1000 }
+          $proc = @{ pid = 1000; exited = $false; name = @{ value = 'synthetic.exe'; error = $null }; exe = @{ value = 'C:\Synthetic\a.exe'; error = $null } }
+          @{ first = @($sock); second = @($sock); processes = @($proc); services = @(); services_error = $null } |
+            ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8NoBOM build\fixture.json
+          $out = & dist\FirewallAI\firewallai-cli.exe endpoints --fixture build\fixture.json
+          if ($LASTEXITCODE -ne 0 -or -not ($out -match 'bound')) { throw "fixture endpoints check failed" }

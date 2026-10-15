@@ -3,7 +3,7 @@ An AI-powered Windows firewall security manager for auditing network connections
 
 ## Status
 
-Pre-alpha (Sprint 1, milestone M1.4). FirewallAI runs **read-only**, as a **standard user**, with no network access. Today it shows:
+Pre-alpha (Sprint 1, milestone M1.5). FirewallAI runs **read-only**, as a **standard user**, with no network access. Today it shows:
 - the effective Windows Firewall **profile** settings;
 - the **rules** in the effective policy (ActiveStore), with their filters. Each filter is marked as collected, not collected, or unreadable, and is never assumed to be "Any";
 - local **listening TCP and bound UDP endpoints and TCP connections** (IPv4 and IPv6), with the owning process and its services where Windows allows reading them. Unavailable details are shown with the reason;
@@ -30,6 +30,8 @@ uv run --frozen firewallai-gui               # desktop window (Profiles, Rules, 
 uv run --frozen pytest -q                    # tests (unit, security, Windows integration, UI)
 uv run --frozen ruff check && uv run --frozen mypy && uv run --frozen lint-imports
 ```
+
+**Portable development build (M1.5):** an unsigned, one-folder Windows x64 bundle with `FirewallAI.exe` (GUI) and `firewallai-cli.exe`. No installed Python and no administrator rights are needed. It is **not a public release** and is not code-signed. Build, verify, and smoke-test it as described in [packaging/BUILD.md](packaging/BUILD.md).
 
 **Note:** `firewallai rules --json` exports may contain host-sensitive information: rule names, program paths, addresses, and interface names. FirewallAI never uploads or logs them automatically. Review any export before sharing it.
 

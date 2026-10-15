@@ -37,6 +37,11 @@ dev = [
     "pytest-qt==4.5.0",
     "ruff==0.16.9",
 ]
+# M1.5 packaging only (human-approved 2026-10-15). Kept out of "dev" so the frozen app is built
+# from runtime dependencies + PyInstaller only (see packaging/BUILD.md), never from dev tools.
+build = [
+    "pyinstaller==6.22.3",
+]
 
 [build-system]
 # Build-time only; approved by the human 2026-10-14 (same vendor as uv).
@@ -64,6 +69,8 @@ ignore = []
 [tool.ruff.lint.per-file-ignores]
 # Tests use assert and controlled subprocess fixtures by design.
 "tests/**" = ["S101", "S603", "S607"]
+# Frozen-bundle smoke tests (M1.5) run the built executables, like the tests above.
+"packaging/smoke/**" = ["S101", "S603", "S607"]
 # The runner is the single audited subprocess entry point (SB-03).
 "src/firewallai/collectors/windows/powershell_runner.py" = ["S603"]
 

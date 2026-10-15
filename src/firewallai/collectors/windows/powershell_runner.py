@@ -174,12 +174,54 @@ def render_script(script: PowerShellScript) -> str:
     return template.replace(_BODY_MARKER, script.body)
 
 
-def build_environment(system_dir: Path, base: Mapping[str, str] | None = None) -> dict[str, str]:
-    """Child environment with ``PSModulePath`` restricted to the system module directory."""
+# PyInstaller-specific values inherited from a frozen parent (M1.5, human decision Q7). Observed on
+# TE-1 with PyInstaller 6.22.3: the bootloader adds _PYI_ARCHIVE_FILE and _PYI_PARENT_PROCESS_LEVEL,
+# and its PySide6 runtime hook prepends two bundle directories to PATH and points QT_PLUGIN_PATH and
+# QML2_IMPORT_PATH into the bundle. The portable bundle directory is user-writable, so none of it
+# is passed to PowerShell. Nothing else is removed.
+_PYINSTALLER_PREFIXES = ("_PYI_",)
+_PYINSTALLER_NAMES = frozenset({"_MEIPASS2"})
+_BUNDLE_PATH_LISTS = frozenset({"PATH", "QT_PLUGIN_PATH", "QML2_IMPORT_PATH"})
+
+
+def frozen_bundle_dir() -> Path | None:
+    """The PyInstaller bundle directory when running frozen; None for normal Python."""
+    meipass = getattr(sys, "_MEIPASS", None)
+    if getattr(sys, "frozen", False) and isinstance(meipass, str):
+        return Path(meipass)
+    return None
+
+
+def _inside(entry: str, bundle: str) -> bool:
+    normalized = os.path.normcase(os.path.normpath(entry))
+    return normalized == bundle or normalized.startswith(bundle + os.sep)
+
+
+def build_environment(
+    system_dir: Path,
+    base: Mapping[str, str] | None = None,
+    *,
+    bundle_dir: Path | None = None,
+) -> dict[str, str]:
+    """Child environment with ``PSModulePath`` restricted to the system module directory.
+
+    PyInstaller-internal variables are always removed. When ``bundle_dir`` is given (frozen app),
+    entries pointing inside the bundle are removed from PATH, QT_PLUGIN_PATH, and QML2_IMPORT_PATH.
+    """
     env = dict(os.environ if base is None else base)
     for key in list(env):
-        if key.upper() == "PSMODULEPATH":
+        upper = key.upper()
+        pyinstaller = upper in _PYINSTALLER_NAMES or upper.startswith(_PYINSTALLER_PREFIXES)
+        if upper == "PSMODULEPATH" or pyinstaller:
             del env[key]
+    if bundle_dir is not None:
+        bundle = os.path.normcase(os.path.normpath(str(bundle_dir)))
+        for key in [k for k in env if k.upper() in _BUNDLE_PATH_LISTS]:
+            kept = [e for e in env[key].split(os.pathsep) if e and not _inside(e, bundle)]
+            if kept:
+                env[key] = os.pathsep.join(kept)
+            else:
+                del env[key]
     env["PSModulePath"] = str(system_dir / "WindowsPowerShell" / "v1.0" / "Modules")
     return env
 
@@ -378,7 +420,7 @@ class PowerShellRunner:
             self.encode_params(params),
             timeout_s=script.timeout_s,
             max_output_bytes=script.max_output_bytes,
-            env=build_environment(self._system_dir),
+            env=build_environment(self._system_dir, bundle_dir=frozen_bundle_dir()),
         )
         return interpret(result, source=source)
 
@@ -405,7 +447,7 @@ class PowerShellRunner:
             source=source,
             on_event=on_event,
             cancel=cancel,
-            env=build_environment(self._system_dir),
+            env=build_environment(self._system_dir, bundle_dir=frozen_bundle_dir()),
         )
 
 
