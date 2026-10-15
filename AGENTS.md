@@ -20,7 +20,9 @@ Proposed until the matching ADR is **Accepted**. Current statuses: [docs/adr/REA
 ## 3. Repository map
 ```
 src/firewallai/  app/ core/ collectors/ storage/ securitydocs/ references/ ai/ ui/ cli/
-packaging/  tests/  docs/{planning,architecture,adr,development,user}/
+packaging/  tests/  docs/{planning,architecture,adr,development,research,user}/
+scripts/research/   read-only, non-elevated investigation probes (not production code)
+docs/research/      dated research reports + sanitized evidence/ (no names, paths, SIDs, addresses)
 ```
 Responsibilities and allowed dependencies: [docs/architecture/module-map.md](docs/architecture/module-map.md).
 

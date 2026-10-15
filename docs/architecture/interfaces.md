@@ -34,7 +34,7 @@ class PowerShellRunner:                            # windows/powershell_runner.p
 **GUI:** `firewallai-gui [--fixture PATH]`. Collection runs in a `QThreadPool` worker and results come back through Qt signals.
 
 ## Collectors, planned (`collectors`, v0.1)
-The rules collector is blocked on the D9 investigation ([ADR 0009](../adr/0009-firewall-read-path.md) evidence §B).
+Rules-collector read path: decided in [ADR 0009](../adr/0009-firewall-read-path.md) (Accepted v0.1 direction). It uses an ActiveStore bulk inventory plus per-rule restricted filters in a background process, with progressive collection evaluated in M1.3. Not implemented yet.
 ```python
 class FirewallCollector(Protocol):
     def profiles(self) -> CollectorResult[list[FirewallProfile]]: ...

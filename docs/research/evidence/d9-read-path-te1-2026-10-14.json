@@ -1,0 +1,2010 @@
+{
+  "schema": "firewallai.research.d9/1",
+  "generated_at": "2026-10-15T03:39:26+00:00",
+  "environment": {
+    "test_environment": "TE-1 (see docs/planning/13-testing-strategy.md §4)",
+    "windows_build": 26200,
+    "elevated": false,
+    "ps_version": "5.1.26100.9549",
+    "culture": "es-ES",
+    "netsecurity_version": "2.0.0.0"
+  },
+  "sanitization": "Counts, timings, rates, and categories only. No names, paths, SIDs, addresses, or host identifiers.",
+  "access_matrix": {
+    "rules_active": {
+      "ok": true,
+      "count": 1586,
+      "ms": 2204
+    },
+    "rules_persistent": {
+      "ok": true,
+      "count": 1583,
+      "ms": 984
+    },
+    "rules_rsop": {
+      "ok": true,
+      "count": 0,
+      "ms": 23
+    },
+    "rules_systemdefaults": {
+      "ok": true,
+      "count": 413,
+      "ms": 216
+    },
+    "rules_static_service": {
+      "ok": true,
+      "count": 191,
+      "ms": 75
+    },
+    "rules_configurable_service": {
+      "ok": true,
+      "count": 95,
+      "ms": 51
+    },
+    "port_active_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallPortFilter",
+      "hresult": "0x80131500",
+      "ms": 230
+    },
+    "address_active_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallAddressFilter",
+      "hresult": "0x80131500",
+      "ms": 192
+    },
+    "application_active_all": {
+      "ok": true,
+      "count": 1586,
+      "ms": 191
+    },
+    "service_active_all": {
+      "ok": true,
+      "count": 1586,
+      "ms": 183
+    },
+    "interfacetype_active_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallInterfaceTypeFilter",
+      "hresult": "0x80131500",
+      "ms": 234
+    },
+    "interface_active_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallInterfaceFilter",
+      "hresult": "0x80131500",
+      "ms": 6252
+    },
+    "security_active_all": {
+      "ok": true,
+      "count": 1586,
+      "ms": 212
+    },
+    "port_persistent_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallPortFilter",
+      "hresult": "0x80131500",
+      "ms": 272
+    },
+    "address_persistent_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallAddressFilter",
+      "hresult": "0x80131500",
+      "ms": 266
+    },
+    "port_rsop_all": {
+      "ok": true,
+      "count": 0,
+      "ms": 26
+    },
+    "port_systemdefaults_all": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Get-NetFirewallPortFilter",
+      "hresult": "0x80131500",
+      "ms": 75
+    },
+    "cim_port_class_default": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand",
+      "hresult": "0x80131500",
+      "ms": 537
+    },
+    "cim_address_class_default": {
+      "ok": false,
+      "category": "PermissionDenied",
+      "error_id": "Windows System Error 5,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand",
+      "hresult": "0x80131500",
+      "ms": 262
+    },
+    "cim_app_class_default": {
+      "ok": true,
+      "count": 1583,
+      "ms": 242
+    },
+    "cim_rule_class_default": {
+      "ok": true,
+      "count": 1583,
+      "ms": 999
+    }
+  },
+  "per_rule_association": {
+    "rule_count": 1586,
+    "port_filters_returned": 1586,
+    "port_errors": 0,
+    "port_error_ids": [],
+    "address_filters_returned": 1586,
+    "address_errors": 0,
+    "address_error_ids": []
+  },
+  "parallel_pipelines": {
+    "max_errors_per_pipeline": {
+      "port": 0,
+      "address": 0,
+      "interfacetype": 0
+    },
+    "interfacetype_counts": {
+      "Any": 1586
+    },
+    "interfacetype_filters_returned": 1586
+  },
+  "association_parameter_variant": {
+    "ok": false,
+    "category": "InvalidData",
+    "error_id": "ParameterArgumentTransformationError,Get-NetFirewallPortFilter"
+  },
+  "com": {
+    "rule_count": 1583,
+    "current_profile_types_bitmask": 4,
+    "local_policy_modify_state": 0
+  },
+  "comparison_com_vs_active_store": {
+    "active_store_rule_count": 1586,
+    "com_rule_count": 1583,
+    "matched_by_key": 1506,
+    "active_store_only_count": 80,
+    "com_only_count": 77,
+    "active_store_only": [
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "Duplicate",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive Enforced",
+        "primary_status": "OK",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Dynamic",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": false,
+        "has_package_sid": false,
+        "has_program": true,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "Duplicate",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Dynamic",
+        "enforcement_status": "ProfileInactive Enforced",
+        "primary_status": "OK",
+        "has_owner_sid": false,
+        "has_package_sid": false,
+        "has_program": true,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive Enforced",
+        "primary_status": "OK",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive Enforced",
+        "primary_status": "OK",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive Enforced",
+        "primary_status": "OK",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "ProfileInactive",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Inbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Dynamic",
+        "enforcement_status": "ProfileInactive Enforced",
+        "primary_status": "OK",
+        "has_owner_sid": false,
+        "has_package_sid": false,
+        "has_program": true,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      },
+      {
+        "direction": "Outbound",
+        "action": "Allow",
+        "enabled": "True",
+        "policy_store_source_type": "Local",
+        "enforcement_status": "OptimizedOut",
+        "primary_status": "Inactive",
+        "has_owner_sid": true,
+        "has_package_sid": false,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "display_is_resource_string": false
+      }
+    ],
+    "com_only": [
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 1,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      },
+      {
+        "direction": 2,
+        "action": 1,
+        "enabled": true,
+        "has_program": false,
+        "group_is_resource_string": true,
+        "name_is_resource_string": true
+      }
+    ],
+    "duplicate_keys_active_store": 295,
+    "duplicate_keys_com": 292,
+    "unique_pairs_compared": 415,
+    "field_agreement_rate": {
+      "local_address": 1.0,
+      "local_port": 0.9181,
+      "protocol": 1.0,
+      "remote_address": 0.9639,
+      "remote_port": 0.9976
+    },
+    "field_compared_counts": {
+      "protocol": 415,
+      "local_port": 415,
+      "remote_port": 415,
+      "local_address": 415,
+      "remote_address": 415
+    },
+    "mismatch_shapes": {
+      "local_port: AS=kw:rpc vs COM=any": 28,
+      "remote_address: AS=kw:localsubnet6 vs COM=kw:localsubnet": 8,
+      "remote_address: AS=kw:playtodevice vs COM=any": 5,
+      "local_port: AS=kw:rpcepmap vs COM=kw:rpc-epmap": 4,
+      "remote_address: AS=explicit+kw:localsubnet6 vs COM=explicit+kw:localsubnet+range": 2,
+      "local_port: AS=kw:iphttpsin vs COM=kw:iphttps": 1,
+      "remote_port: AS=kw:iphttpsout vs COM=kw:iphttps": 1,
+      "local_port: AS=kw:playtodiscovery vs COM=kw:ply2disc": 1
+    },
+    "unmatched_key_diagnostics": {
+      "active_store_only_without_same_named_com_only": 80,
+      "differing_key_components": {}
+    },
+    "key_groups_compared_as_multisets": 705,
+    "key_groups_with_identical_port_address_multisets": 646,
+    "rules_in_identical_groups": 1424,
+    "active_store_policy_source_types": {
+      "Local": 1583,
+      "Dynamic": 3
+    },
+    "active_store_enforcement_status": {
+      "OptimizedOut": 316,
+      "Disabled": 168,
+      "NoDynamicTransport": 4,
+      "ProfileInactive Enforced": 333,
+      "ProfileInactive": 218,
+      "ProfileInactive NoLocalPort": 2,
+      "ProfileInactive NoDynamicTransport": 4,
+      "Enforced": 98,
+      "ProfileInactive NoRemoteAddress": 2,
+      "NoLocalPort": 1,
+      "NoRemoteAddress": 4,
+      "Duplicate": 436
+    },
+    "active_store_with_owner_sid": 160,
+    "active_store_inbound_enabled": 1100,
+    "active_store_direction_enabled": {
+      "Outbound/enabled=False": 96,
+      "Outbound/enabled=True": 222,
+      "Inbound/enabled=False": 168,
+      "Inbound/enabled=True": 1100
+    },
+    "com_only_name_is_resource_string": 77,
+    "active_store_only_display_is_resource_string": 0,
+    "active_store_with_package_sid": 29
+  },
+  "wfp": {
+    "engine_open_rc": "0x00000000",
+    "create_enum_rc": "0x00000005",
+    "ok": false,
+    "ms": 1
+  },
+  "registry": {
+    "local_rules": {
+      "ok": true,
+      "value_count": 1583,
+      "format_versions": {
+        "v2.33": 1175,
+        "v2.10": 260,
+        "v2.32": 90,
+        "v2.31": 54,
+        "v2.27": 4
+      }
+    },
+    "gpo_rules": {
+      "ok": false,
+      "error": "not_present"
+    }
+  },
+  "timings": {
+    "active_rules_query": {
+      "median_ms": 1806,
+      "min_ms": 1721,
+      "max_ms": 1974,
+      "runs": 3
+    },
+    "app_and_service_filters_bulk": {
+      "median_ms": 381,
+      "min_ms": 379,
+      "max_ms": 439,
+      "runs": 3
+    },
+    "per_rule_port_pipeline": {
+      "median_ms": 6047,
+      "min_ms": 5300,
+      "max_ms": 6079,
+      "runs": 3
+    },
+    "per_rule_address_pipeline": {
+      "median_ms": 5557,
+      "min_ms": 5487,
+      "max_ms": 5635,
+      "runs": 3
+    },
+    "com_rules_enumeration": {
+      "median_ms": 320,
+      "min_ms": 296,
+      "max_ms": 349,
+      "runs": 3
+    },
+    "assoc_parameter_port": {
+      "median_ms": 43,
+      "min_ms": 37,
+      "max_ms": 179,
+      "runs": 3
+    },
+    "wfp_filter_enum": {
+      "median_ms": 1,
+      "min_ms": 1,
+      "max_ms": 7,
+      "runs": 3
+    },
+    "process_wall_active_rules": {
+      "median_ms": 3856,
+      "min_ms": 3680,
+      "max_ms": 4401,
+      "runs": 3
+    },
+    "process_wall_per_rule": {
+      "median_ms": 15683,
+      "min_ms": 14874,
+      "max_ms": 15741,
+      "runs": 3
+    },
+    "process_wall_com": {
+      "median_ms": 672,
+      "min_ms": 666,
+      "max_ms": 734,
+      "runs": 3
+    },
+    "parallel_3_pipelines_wall": {
+      "median_ms": 20314,
+      "min_ms": 19051,
+      "max_ms": 32883,
+      "runs": 3
+    },
+    "parallel_port_pipeline_in_process": {
+      "median_ms": 17209,
+      "min_ms": 16149,
+      "max_ms": 19037,
+      "runs": 3
+    },
+    "parallel_address_pipeline_in_process": {
+      "median_ms": 17223,
+      "min_ms": 16126,
+      "max_ms": 19031,
+      "runs": 3
+    },
+    "parallel_interfacetype_pipeline_in_process": {
+      "median_ms": 17204,
+      "min_ms": 16148,
+      "max_ms": 19028,
+      "runs": 3
+    }
+  },
+  "wall_log": [
+    "access matrix: 14.18s wall"
+  ]
+}
