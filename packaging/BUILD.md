@@ -44,7 +44,7 @@ uv run --frozen pytest packaging/smoke -p no:cacheprovider -s --bundle dist/Fire
 2. Both executables: `asInvoker` manifest (`uiAccess="false"`), GUI or console subsystem, version resource matching `pyproject.toml`, an icon, and no UPX packing.
 3. **Code integrity:** every `firewallai` module inside each executable is structurally identical to the reviewed source (bytecode, constants including the registered PowerShell script bodies, names, line tables).
 4. Attack surface: `ssl`, `http`, `urllib.request`, `asyncio`, `multiprocessing`, other network clients, and dev tools are absent.
-5. No local data: no absolute source paths in code objects; the build user name, computer name, and source directory appear in no bundled file.
+5. No local data: no absolute source paths in code objects; the source directory appears in no bundled file. The build user name and computer name appear in no bundled file, **except files proven byte-identical (SHA-256) to their file in a locked runtime wheel's RECORD**. Those files are published upstream content, and every such match is listed in a separate check (`packaging/privacy_scan.py`; reason: pydantic-core's wheel embeds its upstream build paths under `C:\Users\runneradmin\…`, which is also the GitHub-runner account name).
 6. Licenses for every bundled component, the LGPL replaceability notice, README, `build-info.json` (`signed: false`), the SBOM, SHA-256 sums, and a ZIP with exactly the bundle.
 
 ## Running a downloaded or copied build

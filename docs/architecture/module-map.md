@@ -24,7 +24,7 @@ Status as of M1.4 (2026-10-15; first written for M1.1). The rationale is in [../
 - `buildinfo.py`: version single-sourced from `pyproject.toml`, and the commit read from `.git` without subprocesses;
 - `make_icon.py`;
 - `build.py`;
-- `verify_build.py`;
+- `verify_build.py` and `privacy_scan.py` (stdlib-only local-data scan, unit-tested);
 - `smoke/`: frozen-bundle tests, run explicitly.
 
 PyInstaller lives in the `build` dependency group. See [packaging/BUILD.md](../../packaging/BUILD.md).

@@ -12,20 +12,24 @@ Checks:
    the reviewed source (bytecode, constants including the PowerShell script bodies, names, line
    tables), and the registered PowerShell scripts are present.
 4. Attack surface: network-client, async, multiprocessing, and dev-tool modules are absent.
-5. No embedded local data: no absolute source paths in code objects, and neither the build user
-   name, the computer name, nor the source directory appears in any bundled file.
+5. No embedded local data: no absolute source paths in code objects; the source directory appears
+   in no bundled file; the build user name and computer name appear in no bundled file except files
+   proven byte-identical to their locked upstream wheel (see packaging/privacy_scan.py; such
+   matches are reported separately).
 6. Licenses, notices, README, build info (unsigned), SBOM, and SHA-256 sums are present and valid.
 Prints a JSON report; prints no host data.
 """
 
 import hashlib
+import importlib.metadata as md
+import importlib.util
 import json
 import os
 import re
 import sys
 import zipfile
 from pathlib import Path
-from types import CodeType
+from types import CodeType, ModuleType
 from typing import Any
 
 import pefile
@@ -33,6 +37,20 @@ from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+
+
+def _load_privacy_scan() -> ModuleType:
+    spec = importlib.util.spec_from_file_location(
+        "privacy_scan", ROOT / "packaging" / "privacy_scan.py"
+    )
+    if spec is None or spec.loader is None:
+        raise SystemExit("cannot load packaging/privacy_scan.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+privacy_scan = _load_privacy_scan()
 TOP_LEVEL = {
     "FirewallAI.exe",
     "firewallai-cli.exe",
@@ -199,23 +217,38 @@ def check_layout(report: Report, bundle: Path) -> None:
     report.check("layout: no sources, tests, VCS, env, or scratch files", not bad, bad[:10])
 
 
+def _installed_records() -> dict[str, str]:
+    """RECORD texts of all installed distributions; privacy_scan keeps only the runtime set."""
+    records: dict[str, str] = {}
+    for dist in md.distributions():
+        text = dist.read_text("RECORD")
+        if text:
+            records[dist.metadata["Name"]] = text
+    return records
+
+
 def check_no_local_data(report: Report, bundle: Path) -> None:
-    needles = [str(ROOT), str(ROOT).replace("\\", "/")]
-    for var in ("USERNAME", "COMPUTERNAME"):
-        value = os.environ.get(var, "")
-        if len(value) >= 4:
-            needles.append(value)
-    patterns = [n.encode("utf-8") for n in needles] + [n.encode("utf-16-le") for n in needles]
-    patterns += [p.lower() for p in patterns]
-    hits = []
-    for path in bundle.rglob("*"):
-        if path.is_file():
-            data = path.read_bytes()
-            low = data.lower()
-            if any(p in data or p in low for p in patterns):
-                hits.append(path.relative_to(bundle).as_posix())
-    # Only counts and file names are reported, never the matched values.
-    report.check("no build user, computer name, or source path in any file", not hits, hits[:10])
+    identity = [os.environ.get(var, "") for var in ("USERNAME", "COMPUTERNAME")]
+    result = privacy_scan.scan(
+        privacy_scan.bundle_files(bundle),
+        source_needles=[str(ROOT), str(ROOT).replace("\\", "/")],
+        identity_needles=identity,
+        index=privacy_scan.wheel_index(_installed_records(), allowed=RUNTIME_SBOM_COMPONENTS),
+    )
+    # Only file names are reported, never the matched values.
+    report.check(
+        "no source path in any file", not result.source_path_hits, result.source_path_hits[:10]
+    )
+    report.check(
+        "no build user or computer name in any file (except proven upstream content)",
+        not result.identity_hits,
+        result.identity_hits[:10],
+    )
+    report.check(
+        "identity matches attributed to byte-identical locked upstream wheels (reported)",
+        True,
+        [f"{f} ({d})" for f, d in result.attributed_upstream],
+    )
 
 
 def check_metadata(report: Report, bundle: Path, version: str) -> None:

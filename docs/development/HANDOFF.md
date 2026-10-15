@@ -25,6 +25,42 @@ $ git switch main && git merge --ff-only origin/main     -> 5eb158e
 $ git switch -c feat/s1-m1-5-packaging
 ```
 
+## CI failure on PR #8 and its correction (2026-10-15) [Verified locally; uncommitted, not pushed]
+- **Status:** fix approved by the human, final-review hardening added, **commit and push authorized** (2026-10-15) to re-run CI on PR #8.
+- **Symptom (reported by the human):** the first CI run on PR #8. "Gates and tests" passed. "Build and verify the portable bundle" built both executables, but `verify_build.py` failed the check "no build user, computer name, or source path in any file", only for `_internal/pydantic_core/_pydantic_core.cp312-win_amd64.pyd`.
+- **Root cause (verified):**
+  - The bundled pydantic-core binary contains **133 copies of one upstream path prefix**, `C:\Users\runneradmin\.cargo\registry\src\index.crates.io-…`. These are Rust crate source paths compiled in by **pydantic-core's own upstream build on GitHub Actions**.
+  - GitHub's Windows runner account is `runneradmin`, and our CI build user is the same account, so the bare user-name search term matched.
+  - The file is **byte-identical to the SHA-256 in the pydantic-core wheel's RECORD**, and the wheel is hash-locked in `uv.lock`. It holds no data from our build: no `D:\a\` checkout path and no "firewallai".
+  - It passed locally only because the local user name differs.
+  - **Reproduced locally** with `USERNAME=runneradmin`: the same check failed on the same single file.
+  - No other bundled file contains the account name.
+- **Correction:** the matching logic now distinguishes provenance (`packaging/privacy_scan.py`, used by `verify_build.py`):
+  - **Source-path search terms fail in every file. No exception.**
+  - User-name and computer-name terms fail in every file, except a file under `_internal/` whose bytes equal (SHA-256) the hash in the RECORD of an installed, locked **runtime** distribution (the SBOM set).
+  - Every such match is **reported** in a separate check, `identity matches attributed to byte-identical locked upstream wheels`.
+  - No exception for our executables, the base library archive, generated files, files missing from RECORD, modified wheel files, or non-runtime distributions.
+  - `.pyd`, `.dll`, and `.exe` are not exempted by type; `_internal` is not ignored; the privacy check is not disabled; pydantic-core is unchanged.
+  - Hardening found by a new test: malformed RECORD hashes are now rejected (strict base64 and exactly 32 bytes); before, they decoded to an empty digest, which could never match but was sloppy.
+- **Evidence:**
+  - verifier with `USERNAME=runneradmin`: exit 0, with the `.pyd` reported as attributed to `pydantic-core`;
+  - verifier with the local user: exit 0;
+  - mutation checks on a bundle copy, all failed as required: a tampered `.pyd` (exemption lost), a planted non-upstream file containing `runneradmin`, and a planted source path;
+  - `tests/unit/test_packaging_privacy_scan.py`: **28 passed** (after the final-review hardening).
+- **Final review hardening** (human conditions 1–5, 2026-10-15):
+  - each wheel entry binds **one path to one hash**, and the bundled file is looked up by its own path, so a hash recorded for another file cannot authorize it;
+  - unrecorded paths get no exemption;
+  - only the locked **runtime** distributions can vouch for files (filtering moved into `privacy_scan.wheel_index(allowed=...)`, unit-tested; distribution names normalized);
+  - a path recorded by two distributions with different hashes is dropped as ambiguous;
+  - our executables and **top-level `_internal` files** (Python runtime, `base_library.zip`) are never exempt, even with a forged RECORD entry, because wheel files live inside a package directory;
+  - source paths are never exempt;
+  - every attributed match is reported.
+  - **28 regression tests** (was 15).
+- **Residual risk:**
+  - A runtime wheel's own content could in principle contain *any* string. It is trusted only because its exact bytes are pinned by the hash-locked wheel; a dependency upgrade changes that content and is reviewed through the lockfile.
+  - The check still cannot detect private data that **our build** might write into a file that also comes byte-identical from a wheel, but such a file would then no longer match its RECORD hash.
+  - `COMPUTERNAME` on GitHub runners is random; it is scanned as before.
+
 ## Human decisions for M1.5 (2026-10-15)
 - **Q1:** PyInstaller 6.22.3 as a development-only dependency, after verification.
 - **Q2:** dependency audit and SBOM with uv tooling. Only public package names and versions may go out.
@@ -177,6 +213,7 @@ Not performed yet. No results are recorded. See packaging/BUILD.md for steps 1�
 | `ruff check` / `ruff format --check` / `mypy` / `lint-imports` / `uv lock --check` / `uv audit --frozen` | All checks passed / 83 files formatted / no issues in 43 source files / 5 kept, 0 broken / resolved 45 packages / no known vulnerabilities in 44 packages |
 | `packaging/verify_build.py dist` (frozen bundle) | 28/28 checks passed |
 | `pytest packaging/smoke --bundle dist/FirewallAI` (frozen binaries) | **11 passed** |
+| **After the CI fix, first version** | Source suite **414 passed** in 108.49 s (399 + 15 new privacy-scan tests); ruff, format (86 files), mypy (43), 5 contracts, lock, audit (44 packages) clean; `verify_build.py` exit 0 locally **and with `USERNAME=runneradmin`** (30 checks); frozen smoke **11 passed** (frozen rule scan 26.9 s, N-04 EXCEEDED; frozen endpoints 0.78 s; GUI to first collection 0.45 s) |
 | **Pre-commit re-run (2026-10-15, after the human's final decisions)** | Source suite **399 passed** in 109.50 s; ruff, format (84 files), mypy (43), 5 contracts, lock, audit (44 packages) clean; `verify_build.py` exit 0 (28/28); frozen smoke **11 passed** (frozen rule scan 27.9 s, N-04 EXCEEDED; frozen endpoints 0.90 s; GUI to first collection 0.43 s); source endpoint snapshot 1.00 s cold (EXCEEDS) / 0.75 / 0.79 s |
 | Suppressions vs `main` | `noqa` src 8/8, tests 0/0, packaging 0; `type: ignore` src 0/0, tests 4/4; skip/xfail 1/1 (unchanged) |
 | Source-run measurements in the same suite | rule scan 29.97 s (**N-04 EXCEEDED by 20.0 s**); endpoint snapshot 1.15 s cold (exceeds) / 0.78 / 0.82 s; network tab max GUI gap 72 ms |
@@ -223,7 +260,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 ## Next steps
-1. The human opens and reviews the PR; the first CI run follows. Fix any CI or packaging defects found.
+1. The human reviews the CI fix and authorizes its commit and push, so CI re-runs on PR #8.
 2. The manual GUI checklist; then the ADR 0006 decision. Do not start Sprint 2 without authorization.
 
 ## Resume commands
