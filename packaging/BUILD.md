@@ -53,7 +53,30 @@ uv run --frozen pytest packaging/smoke -p no:cacheprovider -s --bundle dist/Fire
 - The folder is user-writable: other programs running as the same user could modify it. This gives them no elevation, because FirewallAI never runs elevated (see ADR 0006 §5).
 
 ## Manual GUI checklist (decision Q5: automated launch tests plus this checklist)
-**Status: PENDING.** Authorized by the human on 2026-10-15; not yet performed. Do not record it as passed without real results.
+**Status: basic manual acceptance PASSED (7 of 7); detailed checklist PARTLY PENDING.**
+
+### Basic manual acceptance (human, 2026-10-15)
+Performed and reported by the human reviewer on the locally built development bundle, as a **standard user**. Recorded verbatim; nothing else is inferred.
+
+| # | Basic check | Result |
+|---|---|---|
+| B1 | Application startup | **PASS** |
+| B2 | Profiles tab | **PASS** |
+| B3 | Rules tab and rule collection | **PASS** |
+| B4 | Network tab and endpoint collection | **PASS** |
+| B5 | Cancellation during collection | **PASS** |
+| B6 | Window resizing and navigation | **PASS** |
+| B7 | Application shutdown and restart | **PASS** |
+
+**Not covered by these results, so still pending:**
+- display scaling at 100 %, 150 %, and 200 %;
+- the read-only installation folder check by hand (the automated frozen smoke test did verify it: no files created, changed, or removed);
+- keyboard-only operation;
+- closing the window *during* a collection;
+- the related-rules panel details;
+- clean-VM testing and Windows 10.
+
+The detailed table below shows which rows a basic check relates to. **A row is never marked PASS unless its exact expectation was reported.**
 
 ### How to run it
 1. Build and verify the bundle (steps 1-4 above), or use the existing local build.
@@ -69,19 +92,19 @@ uv run --frozen pytest packaging/smoke -p no:cacheprovider -s --bundle dist/Fire
 ### Checklist
 | # | Step | Expected | Result |
 |---|---|---|---|
-| 1 | Start `FirewallAI.exe` | Window opens; no console window; title "FirewallAI (read-only)" | pending |
-| 2 | Wait for the Profiles tab | Domain, Private, and Public profiles load; no console flash | pending |
-| 3 | Rules tab → **Collect rules**, then **Cancel** after a few seconds | Collection stops; status says incomplete/cancelled; window stays usable | pending |
-| 4 | Rules tab → **Collect rules** to completion (about 30 s) | Rules listed; the timing line shows the N-04 status (expected: **EXCEEDED**); "No verdicts" | pending |
-| 5 | During step 4, drag and resize the window | The window keeps responding (no "Not responding") | pending |
-| 6 | Network tab **before** any rule scan in a fresh session: **Collect endpoints**, select a row | Default filter "Listening TCP and bound UDP"; panel says related rules are **not available** and that no rule scan is started automatically | pending |
-| 7 | Network tab after step 4: select a listening/bound endpoint | Panel shows Related / Related with unevaluated conditions / Cannot evaluate / Not related, with the disclaimer; no claims of reachability or permission | pending |
-| 8 | Network tab → **Collect endpoints**, then **Cancel** immediately | No freeze; the result is cancelled or partial, with limitations shown | pending |
-| 9 | Switch the filter to "TCP connections" and "All endpoints"; sort a column | Instant; remote addresses are visible in the GUI (they are hidden only in CLI text output) | pending |
-| 10 | Display scaling 100 %, 150 %, 200 % (Settings → Display; sign out if Windows asks) | Text readable, nothing clipped | pending |
-| 11 | Keyboard only: Tab / Shift+Tab, Ctrl+Tab between tabs, Alt+underlined letters | Every control is reachable | pending |
-| 12 | Close the window **during** a rule collection | The process exits within a few seconds; no `powershell.exe` left in Task Manager | pending |
-| 13 | After closing: check the `dist\FirewallAI` folder | No new files (no logs, caches, or settings written there) | pending |
+| 1 | Start `FirewallAI.exe` | Window opens; no console window; title "FirewallAI (read-only)" | related: B1 PASS; console/title details not reported |
+| 2 | Wait for the Profiles tab | Domain, Private, and Public profiles load; no console flash | related: B2 PASS; details not reported |
+| 3 | Rules tab → **Collect rules**, then **Cancel** after a few seconds | Collection stops; status says incomplete/cancelled; window stays usable | related: B3, B5 PASS; the tab where cancel was tested was not reported |
+| 4 | Rules tab → **Collect rules** to completion (about 30 s) | Rules listed; the timing line shows the N-04 status (expected: **EXCEEDED**); "No verdicts" | related: B3 PASS; N-04 line not reported |
+| 5 | During step 4, drag and resize the window | The window keeps responding (no "Not responding") | related: B6 PASS; resizing *during* collection not reported |
+| 6 | Network tab **before** any rule scan in a fresh session: **Collect endpoints**, select a row | Default filter "Listening TCP and bound UDP"; panel says related rules are **not available** and that no rule scan is started automatically | related: B4 PASS; panel details not reported |
+| 7 | Network tab after step 4: select a listening/bound endpoint | Panel shows Related / Related with unevaluated conditions / Cannot evaluate / Not related, with the disclaimer; no claims of reachability or permission | pending (not reported) |
+| 8 | Network tab → **Collect endpoints**, then **Cancel** immediately | No freeze; the result is cancelled or partial, with limitations shown | related: B4, B5 PASS; the tab was not reported |
+| 9 | Switch the filter to "TCP connections" and "All endpoints"; sort a column | Instant; remote addresses are visible in the GUI (they are hidden only in CLI text output) | related: B6 PASS (navigation); filters/sorting not reported |
+| 10 | Display scaling 100 %, 150 %, 200 % (Settings → Display; sign out if Windows asks) | Text readable, nothing clipped | **pending** |
+| 11 | Keyboard only: Tab / Shift+Tab, Ctrl+Tab between tabs, Alt+underlined letters | Every control is reachable | **pending** |
+| 12 | Close the window **during** a rule collection | The process exits within a few seconds; no `powershell.exe` left in Task Manager | related: B7 PASS (shutdown and restart); closing *during* collection not reported |
+| 13 | After closing: check the `dist\FirewallAI` folder | No new files (no logs, caches, or settings written there) | **pending** by hand (verified automatically by `packaging/smoke`) |
 
 ## Not yet covered
 Clean Windows 11 VM and clean Windows 10 22H2 tests (Hyper-V availability pending), code signing ([ADR 0007](../docs/adr/0007-code-signing.md)), the installer (Sprint 4), and a running CI workflow (prepared in `.github/workflows/ci.yml`, not yet run).

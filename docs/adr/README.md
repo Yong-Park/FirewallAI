@@ -17,7 +17,7 @@ This is the **living index and decision register** for FirewallAI. Update it in 
 | [0003](0003-ai-in-v0-2.md) | D3 | AI advisor ships in v0.2 | **Accepted** | |
 | [0004](0004-default-local-model.md) | D4 | Default recommended local model | Proposed | Benchmark-dependent |
 | [0005](0005-v0-1-report-formats.md) | D5 | v0.1 report formats (JSON, HTML, basic Qt PDF) | Proposed | Qt PDF prototype |
-| [0006](0006-v0-1-distribution.md) | D6 | v0.1 distribution (PyInstaller one-dir + Inno per-user) | Proposed | M1.5: portable one-folder dev build implemented and measured (implementation notes and draft Accepted wording in the ADR); clean-VM test and installer pending |
+| [0006](0006-v0-1-distribution.md) | D6 | v0.1 distribution (PyInstaller one-dir + Inno per-user) | Proposed | M1.5: portable one-folder dev build implemented and merged (#8); CI passed; human basic GUI acceptance 7/7 PASS; acceptance review and exact proposed wording in the ADR (awaiting human decision); clean-VM test and installer pending |
 | [0007](0007-code-signing.md) | D7 | Code signing (SignPath → OV; Azure not eligible from Guatemala) | Proposed | OV CA availability [VERIFY] |
 | [0008](0008-windows-10-support.md) | D8 | Windows 10 best-effort | Proposed | |
 | [0009](0009-firewall-read-path.md) | D9 | Firewall read path: ActiveStore, non-elevated; bulk inventory + per-rule restricted filters | **Accepted** (v0.1 direction) | **Implemented in M1.3** (production collector, streaming). Measured full scan about 29-35 s, so **N-04 (10 s) exceeded**. Win10, GPO, service-hardening, and EnforcementStatus checks pending; interface-alias access verified on TE-1 |

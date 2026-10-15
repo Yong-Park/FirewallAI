@@ -7,12 +7,33 @@ Active agent lock: RELEASED
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- **Sprint 1, M1.5 (first distributable Windows desktop app): implemented and verified as a portable, unsigned development build** on `feat/s1-m1-5-packaging` (from `main` `5eb158e`).
-- The human reviewed the report and **authorized the M1.5 commit and `git push -u origin feat/s1-m1-5-packaging`** (2026-10-15). The commit SHA is reported in the session; see `git log`.
-- **Not authorized:** merging, opening the PR (the human reviews it separately), a GitHub Release, uploading the unsigned ZIP or executables, changing branch protection, marking ADR 0006 Accepted, and Sprint 2.
+- **M1.5 merged** to `main` as PR #8 (squash, `6b150a3`). The reviewed commit was `9af1f96`; its tree is identical to `main`.
+- **Documentation-only closeout** on `docs/s1-m1-5-closeout` (from `6b150a3`), **uncommitted**:
+  - the human's manual acceptance results;
+  - the CI result;
+  - the ADR 0006 acceptance review.
+- The human approved committing and pushing this closeout (2026-10-15).
+- **Not authorized:** merging, marking ADR 0006 Accepted, a GitHub Release, uploading the unsigned ZIP or executables, new features, and Sprint 2.
 - The N-04 gap (rule scan) and the endpoint cold-start gap stay documented limitations.
 - M1.4 is merged (PR #7, `5eb158e`). Its full handoff is in git: `git show 5eb158e:docs/development/HANDOFF.md`.
-- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7). Ruleset 25123659 protects `main` (ADR 0018).
+- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8, `6b150a3`). Ruleset 25123659 protects `main` (ADR 0018).
+
+## Git after the M1.5 merge [Verified, 2026-10-15]
+```
+$ git status --short --untracked-files=all   # on feat/s1-m1-5-packaging, before sync
+(empty; no stash entries)
+$ git fetch origin                     -> 5eb158e..6b150a3  main
+$ git rev-parse 9af1f96^{tree} origin/main^{tree}
+290e7573...  290e7573...               # merged tree identical to the reviewed commit
+$ git switch main && git merge --ff-only origin/main     -> 6b150a3
+$ git switch -c docs/s1-m1-5-closeout
+```
+
+## CI on PR #8 [Verified via the public GitHub API]
+| Run | Commit | Result |
+|---|---|---|
+| 38807641539 | `5822cd9` | **failure**: "Build and verify" privacy-check false positive (fixed) |
+| 38810306571 | `9af1f96` | **success**: "Gates and tests (unit, security, UI)" and "Build and verify the portable bundle" both passed (2026-10-15 21:29–21:32 UTC) |
 
 ## Git after the M1.4 merge [Verified, 2026-10-15]
 ```
@@ -97,8 +118,29 @@ $ git switch -c feat/s1-m1-5-packaging
 - **Proposed hardening (separate decision, not implemented):** import the required modules (NetSecurity, CimCmdlets) explicitly by full System32 path in the constant scripts, and test that the loaded module path is under System32.
 - **Status:** open, for human review. SB-03 wording already corrected.
 
-## Manual GUI checklist: PENDING (human)
-Not performed yet. No results are recorded. See packaging/BUILD.md for steps 1–13 and how to record them here.
+## Manual GUI acceptance [reported by the human, 2026-10-15; not agent-verified]
+The human launched the locally built development bundle **as a standard user**. Basic checks:
+
+| # | Check | Result |
+|---|---|---|
+| B1 | Application startup | **PASS** |
+| B2 | Profiles tab | **PASS** |
+| B3 | Rules tab and rule collection | **PASS** |
+| B4 | Network tab and endpoint collection | **PASS** |
+| B5 | Cancellation during collection | **PASS** |
+| B6 | Window resizing and navigation | **PASS** |
+| B7 | Application shutdown and restart | **PASS** |
+
+**Result: 7 of 7 basic manual checks passed.** Nothing else is inferred.
+
+**Detailed checks still PENDING** (`packaging/BUILD.md` rows 1–13 are cross-referenced there):
+- DPI scaling at 100/150/200 %;
+- keyboard-only operation;
+- closing the window during a collection;
+- the related-rules panel details;
+- the N-04 line in the GUI timing;
+- the read-only install folder checked by hand (the automated frozen smoke test verified it);
+- clean-VM and Windows 10 testing.
 
 ## M1.5 status [Verified unless marked]
 **Implemented:**
@@ -235,9 +277,13 @@ Not performed yet. No results are recorded. See packaging/BUILD.md for steps 1�
 - The ZIP is about 43 MiB; Qt is about 73 MiB of the unpacked bundle.
 
 ## Pending items for the human
-1. Authorize and review the M1.5 PR. **The first CI run happens on that PR.** The merge decision is yours.
-2. Perform the **manual GUI checklist** (PENDING).
-3. **ADR 0006:** decide on acceptance only after a successful CI run, the completed checklist, and any packaging fixes.
+1. **ADR 0006: kept Proposed by the human (2026-10-15).** The original criteria are unchanged:
+   - (1) a successful CI run: **MET**;
+   - (2) the detailed manual GUI checklist completed: **PARTIALLY MET**;
+   - (3) identified packaging defects resolved: **MET**.
+   - It may be accepted only after the detailed checklist is completed and any newly found defects are resolved. The drafted wording stays in the ADR.
+2. The remaining detailed manual checks (DPI, keyboard, close during collection, panel details, N-04 line in the GUI, manual install-folder check).
+3. Review the closeout PR (commit and push authorized 2026-10-15; merging is the human's decision).
 4. **SR-M1.5-01** (PowerShell module resolution): a separate security review.
 5. Still open: Hyper-V / Windows 10 VMs, D17 (Codex), an N-04 plan, and whether to enable CI as a required check (repository settings: human only).
 
@@ -260,8 +306,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 ## Next steps
-1. The human reviews the CI fix and authorizes its commit and push, so CI re-runs on PR #8.
-2. The manual GUI checklist; then the ADR 0006 decision. Do not start Sprint 2 without authorization.
+1. The human's decision on ADR 0006 and on this closeout.
+2. Do not start Sprint 2 without authorization.
 
 ## Resume commands
 ```
