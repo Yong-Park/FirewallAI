@@ -31,6 +31,8 @@ MANIFEST
 #   before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+# FirewallAI keeps its reviewed build spec under version control (M1.5).
+!packaging/firewallai.spec
 
 # Installer logs
 pip-log.txt
@@ -153,6 +155,7 @@ activemq-data/
 .env
 .envrc
 .venv
+.venv-build/
 env/
 venv/
 ENV/

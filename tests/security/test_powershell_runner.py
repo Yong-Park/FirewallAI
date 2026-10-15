@@ -1,6 +1,7 @@
 """SB-03: the runner's command line, parameter channel, limits, and error classification."""
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -95,6 +96,104 @@ def test_build_environment_replaces_user_module_paths() -> None:
     env = build_environment(FAKE_SYSDIR, {"psmodulepath": "C:/evil", "PATH": "x"})
     assert "psmodulepath" not in env
     assert env["PATH"] == "x"
+
+
+# --- M1.5: PyInstaller-specific environment values never reach PowerShell (human decision Q7) --
+
+BUNDLE = Path("C:/Apps/FirewallAI/_internal")
+PYI_PARENT = {
+    "_PYI_ARCHIVE_FILE": "C:/Apps/FirewallAI/FirewallAI.exe",
+    "_pyi_parent_process_level": "1",  # case-insensitive on Windows
+    "_MEIPASS2": "C:/Temp/_MEI123",
+}
+
+
+def _parent_env(**extra: str) -> dict[str, str]:
+    env = {
+        "PATH": os.pathsep.join(
+            [
+                "C:\\Apps\\FirewallAI\\_internal",
+                "c:/apps/firewallai/_INTERNAL/PySide6/",
+                "C:\\Windows\\System32",
+                "C:\\Apps\\FirewallAI\\_internal2",  # sibling with the same prefix: kept
+                "C:\\Tools",
+            ]
+        ),
+        "QT_PLUGIN_PATH": "C:\\Apps\\FirewallAI\\_internal\\PySide6\\plugins",
+        "QML2_IMPORT_PATH": "D:\\MyQml",
+        "PYSIDE6_OPTION_PYTHON_ENUM": "1",
+        "SystemRoot": "C:\\Windows",
+        "PSModulePath": "C:/evil",
+        **PYI_PARENT,
+    }
+    env.update(extra)
+    return env
+
+
+def test_normal_python_strips_only_pyinstaller_internal_variables() -> None:
+    env = build_environment(FAKE_SYSDIR, _parent_env())
+    assert not any(k.upper().startswith("_PYI_") or k.upper() == "_MEIPASS2" for k in env)
+    parent = _parent_env()
+    for key in ("PATH", "QT_PLUGIN_PATH", "QML2_IMPORT_PATH", "PYSIDE6_OPTION_PYTHON_ENUM"):
+        assert env[key] == parent[key]  # not frozen: nothing else is touched
+    assert env["SystemRoot"] == "C:\\Windows"
+    assert env["PSModulePath"] == str(FAKE_SYSDIR / "WindowsPowerShell" / "v1.0" / "Modules")
+
+
+def test_frozen_strips_bundle_entries_and_keeps_everything_else() -> None:
+    env = build_environment(FAKE_SYSDIR, _parent_env(), bundle_dir=BUNDLE)
+    assert env["PATH"].split(os.pathsep) == [
+        "C:\\Windows\\System32",
+        "C:\\Apps\\FirewallAI\\_internal2",
+        "C:\\Tools",
+    ]
+    assert "QT_PLUGIN_PATH" not in env  # every entry pointed into the bundle
+    assert env["QML2_IMPORT_PATH"] == "D:\\MyQml"  # a user's own value is kept
+    assert env["PYSIDE6_OPTION_PYTHON_ENUM"] == "1"
+    assert env["SystemRoot"] == "C:\\Windows"
+    assert not any(k.upper().startswith("_PYI_") for k in env)
+    assert env["PSModulePath"] == str(FAKE_SYSDIR / "WindowsPowerShell" / "v1.0" / "Modules")
+
+
+def test_frozen_bundle_dir_detection(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert pr.frozen_bundle_dir() is None  # normal Python (this test run)
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(BUNDLE), raising=False)
+    assert pr.frozen_bundle_dir() == BUNDLE
+
+
+@pytest.mark.parametrize("frozen", [False, True], ids=["normal", "frozen"])
+def test_both_runner_paths_use_the_sanitized_environment(
+    monkeypatch: pytest.MonkeyPatch, frozen: bool
+) -> None:
+    for key, value in _parent_env().items():
+        monkeypatch.setenv(key, value)
+    if frozen:
+        monkeypatch.setattr(sys, "frozen", True, raising=False)
+        monkeypatch.setattr(sys, "_MEIPASS", str(BUNDLE), raising=False)
+    seen: list[dict[str, str]] = []
+
+    def fake_execute(args: list[str], stdin: bytes, **kwargs: object) -> ExecResult:
+        seen.append(dict(kwargs["env"]))
+        return ExecResult(0, b'{"ok": true, "data": 1}', b"", False, False)
+
+    def fake_execute_stream(args: list[str], stdin: bytes, **kwargs: object) -> object:
+        seen.append(dict(kwargs["env"]))
+        return pr.RunOutcome(data=1)
+
+    monkeypatch.setattr(pr, "execute", fake_execute)
+    monkeypatch.setattr(pr, "execute_stream", fake_execute_stream)
+    from firewallai.collectors.windows.scripts import FIREWALL_RULES
+
+    _runner().run(FIREWALL_PROFILES, source="t")
+    _runner().run_stream(FIREWALL_RULES, source="t", on_event=lambda _: None)
+    assert len(seen) == 2
+    for env in seen:
+        assert not any(k.upper().startswith("_PYI_") or k.upper() == "_MEIPASS2" for k in env)
+        path = env["PATH"].split(os.pathsep)
+        assert ("C:\\Apps\\FirewallAI\\_internal" in path) is (not frozen)
+        assert "C:\\Windows\\System32" in path
+        assert env["PSModulePath"].endswith("Modules")
 
 
 def test_popen_is_called_without_shell(monkeypatch: pytest.MonkeyPatch) -> None:

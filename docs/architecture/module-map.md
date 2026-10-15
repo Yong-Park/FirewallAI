@@ -17,6 +17,18 @@ Status as of M1.4 (2026-10-15; first written for M1.1). The rationale is in [../
 | `cli` | Command-line entry point for dev and automation | `app` | `ui`, Qt | **M1.1:** `firewallai profiles [--json] [--fixture]`. **M1.3:** `firewallai rules [--json] [--summary] [--inventory-only] [--fixture]`. **M1.4:** `firewallai endpoints [--json] [--summary] [--listening] [--show-remote] [--fixture]` |
 | `privileged` (separate process, v0.4+) | Allowlisted typed-operation executor | `core` operation schema only | `ai`, `ui` | planned (v0.4) |
 
+## Packaging (outside `src/`, M1.5)
+`packaging/` holds build tooling, not application code. It is never imported by `firewallai`:
+- `firewallai.spec`: the PyInstaller spec with two executables;
+- `entry_gui.py` and `entry_cli.py`;
+- `buildinfo.py`: version single-sourced from `pyproject.toml`, and the commit read from `.git` without subprocesses;
+- `make_icon.py`;
+- `build.py`;
+- `verify_build.py`;
+- `smoke/`: frozen-bundle tests, run explicitly.
+
+PyInstaller lives in the `build` dependency group. See [packaging/BUILD.md](../../packaging/BUILD.md).
+
 ## Enforced contracts (import-linter, `pyproject.toml`; run with `uv run lint-imports`)
 
 Implemented in M1.1; contract 5 added in M1.4. All five pass ("5 kept, 0 broken", 2026-10-15):
