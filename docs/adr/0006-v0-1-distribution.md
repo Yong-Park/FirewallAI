@@ -72,5 +72,26 @@ The one-folder part of this decision was implemented and measured in M1.5 as a *
 - **Antivirus:** a local Microsoft Defender custom scan as a standard user (engine 1.1.26090.9, signatures 1.461.40.0) found no threats. Nothing was uploaded to third-party scanners.
 - **Not yet validated:** clean Windows 11 VM, clean Windows 10 22H2, the SmartScreen behaviour of a downloaded ZIP, the installer, signing, and CI execution.
 
+## Acceptance review (2026-10-15; status unchanged: Proposed)
+The human set three conditions for accepting the one-folder portable development approach (M1.5 decision 2):
+
+| Condition | Status | Evidence |
+|---|---|---|
+| 1. A GitHub Actions CI run succeeds | **Met**, after one fix | The first run (`5822cd9`, run 38807641539) **failed**: the bundle privacy check gave a false positive on pydantic-core's upstream build paths. The fix `9af1f96` (run 38810306571) **passed both jobs** ("Gates and tests", "Build and verify the portable bundle"). Merged as PR #8 (`6b150a3`) |
+| 2. The manual GUI checklist is completed | **Partly met** | The human reported **7 of 7 basic checks PASS** (startup, profiles, rules, network, cancellation, resize/navigation, shutdown/restart). **Still pending:** DPI scaling at 100/150/200 %, keyboard-only operation, closing during collection, related-rules panel details, and a manual install-folder check (that one is verified automatically) |
+| 3. Packaging defects found are resolved | **Met** | The one defect (the CI privacy false positive) is fixed with provenance-aware matching and 28 regression tests. No packaging defect was reported from the manual checks |
+
+**Out of scope for this acceptance; stays a release gate:**
+- §7 clean-VM validation (Windows 11 required, Windows 10 22H2 best-effort);
+- the Inno Setup installer (Sprint 4);
+- signing ([ADR 0007](0007-code-signing.md)).
+
 ## Proposed wording if accepted (for human review; not applied)
-> **Status: Accepted (2026-MM-DD).** v0.1 is distributed as a PyInstaller **one-folder** bundle built from the hash-locked lockfile in an isolated build environment, with reproducible settings, an automated bundle verifier, a CycloneDX SBOM, and SHA-256 checksums. Until Sprint 4 it ships only as an **unsigned portable ZIP for development and testing**, never as a public release. The Inno Setup per-user installer remains part of this decision for Sprint 4 and must pass the §7 clean-VM validation before the first public release. Signing follows [ADR 0007](0007-code-signing.md).
+Replace the status line with:
+
+> - **Status:** Accepted for the v0.1 one-folder development build (2026-MM-DD, date of human approval) · **Decision ID:** D6 · **Date:** 2026-10-14 · **Proposed by:** claude-code · **Decided by:** human, 2026-MM-DD
+
+and add this section:
+
+> ## Decision record
+> Accepted by the human. v0.1 is built as a PyInstaller **one-folder** bundle (`FirewallAI.exe` and `firewallai-cli.exe` sharing `_internal`). It is built from the hash-locked lockfile in an isolated build environment, with reproducible settings, an automated bundle verifier, a CycloneDX SBOM, and SHA-256 checksums, and is checked by CI on every pull request. Until Sprint 4 it is distributed only as an **unsigned portable ZIP for development and testing**, never as a public release. Before the first public release, all of the following are still required: the Inno Setup per-user installer, the §7 clean-VM validation (Windows 11 required, Windows 10 22H2 best-effort), signing per [ADR 0007](0007-code-signing.md), and completion of the detailed manual GUI checklist in `packaging/BUILD.md` (DPI scaling, keyboard-only operation, close during collection). Acceptance does not change the unmet N-04 target or the endpoint cold-start limitation.
