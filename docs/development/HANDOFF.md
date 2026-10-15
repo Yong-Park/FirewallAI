@@ -7,33 +7,43 @@ Active agent lock: RELEASED
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- **M1.5 merged** to `main` as PR #8 (squash, `6b150a3`). The reviewed commit was `9af1f96`; its tree is identical to `main`.
-- **Documentation-only closeout** on `docs/s1-m1-5-closeout` (from `6b150a3`), **uncommitted**:
-  - the human's manual acceptance results;
-  - the CI result;
-  - the ADR 0006 acceptance review.
-- The human approved committing and pushing this closeout (2026-10-15).
-- **Not authorized:** merging, marking ADR 0006 Accepted, a GitHub Release, uploading the unsigned ZIP or executables, new features, and Sprint 2.
-- The N-04 gap (rule scan) and the endpoint cold-start gap stay documented limitations.
-- M1.4 is merged (PR #7, `5eb158e`). Its full handoff is in git: `git show 5eb158e:docs/development/HANDOFF.md`.
-- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8, `6b150a3`). Ruleset 25123659 protects `main` (ADR 0018).
+- **M1.5 is merged** (PR #8, `6b150a3`), and its **documentation closeout is merged** (PR #9, `3a26f56`; tree identical to the reviewed commit `a3781c4`).
+- **UX direction (ADR 0023):** accepted by the human on 2026-10-15, with refinements. It is recorded on `docs/ux-beginner-first` (from `3a26f56`), **documentation only**. Commit and push are authorized; PR and merge are the human's decision.
+- **Not authorized:** merging, UI changes or a redesign of the current M1.x UI, Sprint 2 implementation, releases.
+- **ADR 0006 stays Proposed** until the detailed manual GUI checklist is completed and any new defects are fixed.
+- The N-04 gap, the endpoint cold-start gap, the unsigned development-only build, unverified Windows 10/clean-VM compatibility, and SR-M1.5-01 remain open.
+- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9). Ruleset 25123659 protects `main` (ADR 0018).
 
-## Git after the M1.5 merge [Verified, 2026-10-15]
-```
-$ git status --short --untracked-files=all   # on feat/s1-m1-5-packaging, before sync
-(empty; no stash entries)
-$ git fetch origin                     -> 5eb158e..6b150a3  main
-$ git rev-parse 9af1f96^{tree} origin/main^{tree}
-290e7573...  290e7573...               # merged tree identical to the reviewed commit
-$ git switch main && git merge --ff-only origin/main     -> 6b150a3
-$ git switch -c docs/s1-m1-5-closeout
-```
+## UX direction: human decisions (2026-10-15)
+- **Decision 1:** ADR 0023, the beginner-first UX direction, is **approved** with refinements. FirewallAI must be understandable to non-experts while keeping full technical evidence for advanced users.
+- **Decision 2:** UX-01 … UX-10 are **approved**, consistent with the security boundaries and with these refinements, all incorporated into [ux-principles.md](../architecture/ux-principles.md):
+  1. Keep the Windows **Domain / Private / Public** profile names, with plain explanations; examples are labelled as examples.
+  2. Rule relationships are described as **possible** only. A matching Allow rule does not guarantee a connection is permitted (SB-20).
+  3. **Attention level is separate from evidence confidence.** Unknown or incomplete evidence never raises a warning. Green never means the whole device is safe. Icons and text accompany colour. No unsupported verdicts before Sprint 2.
+  4. Usability tests add comprehension checks:
+     - C1: a listening port is not necessarily exposure;
+     - C2: an Allow rule is not necessarily permitted traffic;
+     - C3: checked is not the same as unknown.
 
-## CI on PR #8 [Verified via the public GitHub API]
-| Run | Commit | Result |
-|---|---|---|
-| 38807641539 | `5822cd9` | **failure**: "Build and verify" privacy-check false positive (fixed) |
-| 38810306571 | `9af1f96` | **success**: "Gates and tests (unit, security, UI)" and "Build and verify the portable bundle" both passed (2026-10-15 21:29–21:32 UTC) |
+     There must be zero "completely safe" or "hacked" conclusions.
+- **Decision 3:** milestone **UX0** (design only, before Sprint 3) is **approved**. Its deliverables: information architecture, low-fidelity wireframes, accessible design tokens, status/severity semantics, glossary and copy guidelines, the loading/empty/partial/cancelled/error states, and a usability-test plan with measurable criteria. Sprint 3 may implement the approved designs.
+- **Decision 4:** the Sprint 2 plain-language finding fields are **approved**: observed; why it may matter; when it can be normal; supporting evidence; what is still unknown; what to review next. Analysis stays deterministic and evidence-based.
+- **Decision 5:** **no redesign of the current UI now.** The existing functional M1.x UI stays intact until an approved implementation milestone.
+- **Consistency check:**
+  - The findings-catalog severity and confidence (planning 05 §6) are mapped, not redefined (ux-principles §5C).
+  - The PRD's persona P1, N-07, and N-08 are reinforced, not contradicted.
+  - SB-18 and SB-20 remain authoritative.
+  - F1-15 view names may be refined in UX0 without removing any view.
+
+## Git after the M1.5 closeout merge [Verified, 2026-10-15]
+```
+$ git fetch origin                     -> 6b150a3..3a26f56  main
+$ git rev-parse a3781c4^{tree} origin/main^{tree}    # identical
+$ git stash push --include-untracked   # UX drafts preserved
+$ git switch main && git merge --ff-only origin/main  -> 3a26f56
+$ git branch -m docs/ux-beginner-first docs/ux-beginner-first-old-base   # kept, no own commits
+$ git switch -c docs/ux-beginner-first && git stash pop                  # re-applied cleanly
+```
 
 ## Git after the M1.4 merge [Verified, 2026-10-15]
 ```
