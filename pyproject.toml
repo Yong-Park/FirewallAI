@@ -1,0 +1,127 @@
+[project]
+name = "firewallai"
+version = "0.1.0.dev0"
+description = "Read-only, local-first Windows Firewall auditor (M1.1 walking skeleton)."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = "==3.12.*"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Win32 (MS Windows)",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+# Approved for M1.1 only (human approval 2026-10-14). Exact pins; see uv.lock for the full graph.
+# PySide6-Essentials = the official core subset of PySide6 (QtCore/QtGui/QtWidgets, no WebEngine/Addons):
+# smaller install and attack surface than the "pyside6" meta-package.
+dependencies = [
+    "pydantic==2.13.5",
+    "pyside6-essentials==6.11.2",
+]
+
+[project.scripts]
+firewallai = "firewallai.cli.main:main"
+
+[project.gui-scripts]
+firewallai-gui = "firewallai.ui.app:main"
+
+[dependency-groups]
+dev = [
+    "import-linter==2.15",
+    "mypy==2.3.1",
+    "pre-commit==4.6.2",
+    "pytest==9.1.1",
+    "pytest-qt==4.5.0",
+    "ruff==0.16.9",
+]
+
+[build-system]
+# Build-time only; approved by the human 2026-10-14 (same vendor as uv).
+requires = ["uv_build>=0.12.21,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv]
+# Supply-chain hygiene: only resolve releases at least ~2 weeks old at M1.1 start.
+exclude-newer = "2026-09-30T00:00:00Z"
+# Never download interpreters; use the locally installed CPython 3.12.
+python-downloads = "never"
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+# Python snippets in docs are illustrative sketches (frozen planning docs); don't lint/format them.
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "N", "SIM", "RUF", "PTH", "TID"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use assert and controlled subprocess fixtures by design.
+"tests/**" = ["S101", "S603", "S607"]
+# The runner is the single audited subprocess entry point (SB-03).
+"src/firewallai/collectors/windows/powershell_runner.py" = ["S603"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["firewallai"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+markers = [
+    "windows: requires a real Windows host (read-only system queries)",
+    "integration: talks to real OS components (read-only)",
+    "security: security-control tests (must never be skipped without human approval)",
+]
+qt_api = "pyside6"
+
+# ---------------------------------------------------------------- import-linter
+[tool.importlinter]
+root_package = "firewallai"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Layered architecture (ui/cli -> app -> collectors -> core)"
+type = "layers"
+layers = [
+    "firewallai.ui | firewallai.cli",
+    "firewallai.app",
+    "firewallai.collectors",
+    "firewallai.core",
+]
+
+[[tool.importlinter.contracts]]
+name = "core is pure: no Qt, subprocess, or network"
+type = "forbidden"
+source_modules = ["firewallai.core"]
+forbidden_modules = ["PySide6", "subprocess", "socket", "urllib", "http"]
+
+[[tool.importlinter.contracts]]
+name = "Only the UI layer may import Qt"
+type = "forbidden"
+source_modules = ["firewallai.core", "firewallai.collectors", "firewallai.app", "firewallai.cli"]
+forbidden_modules = ["PySide6"]
+
+[[tool.importlinter.contracts]]
+name = "No network modules anywhere in v0.1 (SB-05)"
+type = "forbidden"
+source_modules = ["firewallai"]
+forbidden_modules = ["socket", "urllib", "http", "ssl"]

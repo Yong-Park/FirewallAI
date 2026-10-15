@@ -1,6 +1,11 @@
 # ADR 0001: Application language and UI, Python 3.12 + PySide6
 
-- **Status:** Proposed · **Decision ID:** D1 · **Date:** 2026-10-14 · **Proposed by:** claude-code · **Decided by:** pending
+- **Status:** Accepted. The human accepted D1 on 2026-10-14: "Python 3.12 as the project's pinned Python version". The PySide6 GUI was an earlier explicit human requirement ("Prioritize a professional PySide6 GUI").
+- **Decision ID:** D1 · **Date:** 2026-10-14 · **Proposed by:** claude-code · **Decided by:** human, 2026-10-14
+- **Implementation notes (M1.1):**
+  - `requires-python = "==3.12.*"`, using the locally installed CPython 3.12.6 (uv `python-downloads = "never"`).
+  - GUI dependency: `pyside6-essentials` 6.11.2. This is the official core subset of PySide6 (QtCore/QtGui/QtWidgets, without the Addons/WebEngine modules), giving a smaller install and attack surface.
+  - Moving to 3.13+ requires a new ADR once PySide6, PyInstaller, and Nuitka support it [VERIFY then].
 
 ## 1. Problem
 FirewallAI needs a maintainable Windows desktop application. It has to read firewall and network state, show complex tables, integrate local AI later, and be packaged as an installable EXE. The developer's learning goals and their existing Python/Ollama experience (P_proyect) matter.

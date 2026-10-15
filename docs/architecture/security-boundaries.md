@@ -4,11 +4,11 @@ Every change must preserve these invariants. Weakening any of them requires a ne
 
 | ID | Invariant | Applies from | How it is enforced (planned) |
 |---|---|---|---|
-| SB-01 | v0.1 is **read-only**. No code path modifies firewall, network, or system configuration. | v0.1 | Test that scans embedded scripts for write verbs; code review; [AGENTS.md](../../AGENTS.md) §5 |
-| SB-02 | The UI and AI processes **never run elevated**. The manifest uses `asInvoker`. | v0.1 | PyInstaller manifest; startup check that warns if elevated |
-| SB-03 | Subprocess runs only through `powershell_runner`: absolute path, constant scripts, JSON over stdin, no `shell=True`, timeouts and output caps. | v0.1 | bandit rule, unit tests, injection corpus |
+| SB-01 | v0.1 is **read-only**. No code path modifies firewall, network, or system configuration. | v0.1 | **Implemented (M1.1):** `tests/security/test_powershell_scripts.py` allows only read-only cmdlet allowlists and blocks forbidden constructs. Also code review and [AGENTS.md](../../AGENTS.md) §5 |
+| SB-02 | The UI and AI processes **never run elevated**. The manifest uses `asInvoker`. | v0.1 | **Partly implemented (M1.1):** `collectors/windows/privilege.is_elevated()`; the CLI and GUI warn when elevated; an integration test asserts the tests run unelevated. The `asInvoker` manifest comes with packaging (M1.5) |
+| SB-03 | Subprocess runs only through `powershell_runner`: absolute path, constant scripts, JSON over stdin, no `shell=True`, timeouts and output caps. **No `-ExecutionPolicy Bypass`, `-EncodedCommand`, or `-File`**; `PSModulePath` is restricted to system modules ([ADR 0009](../adr/0009-firewall-read-path.md) evidence §A). | v0.1 | **Implemented (M1.1):** `tests/security/test_powershell_runner.py` (fixed argv, injection corpus, timeout, output cap, `shell=False`, error classification); live round-trip in `tests/integration`; ruff `S` rules |
 | SB-04 | All external data is **untrusted** (rule names, descriptions, process names, paths, hostnames, logs, documents) and is validated at trust boundaries. | v0.1 | pydantic models; escaping tests |
-| SB-05 | v0.1 makes **zero outbound network** connections. | v0.1 | Test suite fails on socket use; manual check before release |
+| SB-05 | v0.1 makes **zero outbound network** connections. | v0.1 | **Implemented (M1.1):** `tests/conftest.py` makes any socket connection fail the test, and an import-linter contract forbids `socket`, `urllib`, `http`, and `ssl` in `firewallai`. Manual check before release |
 | SB-06 | The AI **explains only**. It cannot execute commands, call privileged code, or modify state. Its output is schema-validated, and IDs and citations are checked against local data. | v0.2 | import-linter; validator tests; eval harness |
 | SB-07 | The AI endpoint is **loopback by default**. A non-loopback or cloud endpoint requires explicit opt-in, consent per send, and redaction. | v0.2 | Settings validation; tests |
 | SB-08 | No API keys or credentials in the repository, installer, logs, or database. Keys live only in Windows Credential Manager. | v0.1 | gitleaks; log-redaction tests |

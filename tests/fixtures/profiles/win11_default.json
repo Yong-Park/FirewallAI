@@ -1,0 +1,49 @@
+{
+  "profiles": [
+    {
+      "Name": "Domain",
+      "Enabled": 1,
+      "DefaultInboundAction": 4,
+      "DefaultOutboundAction": 2,
+      "AllowInboundRules": 1,
+      "AllowLocalFirewallRules": 1,
+      "AllowLocalIPsecRules": 1,
+      "NotifyOnListen": 1,
+      "LogAllowed": 0,
+      "LogBlocked": 0,
+      "LogMaxSizeKilobytes": 4096,
+      "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+      "DisabledInterfaceAliases": [""]
+    },
+    {
+      "Name": "Private",
+      "Enabled": 1,
+      "DefaultInboundAction": 4,
+      "DefaultOutboundAction": 2,
+      "AllowInboundRules": 1,
+      "AllowLocalFirewallRules": 1,
+      "AllowLocalIPsecRules": 1,
+      "NotifyOnListen": 1,
+      "LogAllowed": 0,
+      "LogBlocked": 0,
+      "LogMaxSizeKilobytes": 4096,
+      "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+      "DisabledInterfaceAliases": [""]
+    },
+    {
+      "Name": "Public",
+      "Enabled": 1,
+      "DefaultInboundAction": 4,
+      "DefaultOutboundAction": 2,
+      "AllowInboundRules": 1,
+      "AllowLocalFirewallRules": 1,
+      "AllowLocalIPsecRules": 1,
+      "NotifyOnListen": 1,
+      "LogAllowed": 0,
+      "LogBlocked": 0,
+      "LogMaxSizeKilobytes": 4096,
+      "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+      "DisabledInterfaceAliases": [""]
+    }
+  ]
+}

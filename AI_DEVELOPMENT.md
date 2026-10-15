@@ -18,6 +18,7 @@ FirewallAI is built by a human developer, the project owner, with AI coding agen
 | 2026-10-14 | M0 finalization: `.claude` settings sanitization, D16 deny rules, recording human decisions (Guatemala, Codex trailer, Hyper-V pending) | claude-code | Config + docs | Human authorized the D16 implementation; human chose the Codex trailer policy (no invented identity) | **pending** | Deny-rule test: `git branch -D zz-nonexistent-deny-test` was blocked; both settings files pass JSON validation; `git check-ignore` confirms `settings.local.json` is ignored | self-review only (agent) | Deny rules are pattern-based and bypassable (ADR 0016 §4) | Session approvals had written two arbitrary-Python allow rules and absolute local paths into the project `settings.json`. Removed or moved to the git-ignored local file. |
 | 2026-10-14 | M0 final review and documentation commit / PR | claude-code | Final review; recording decision statuses (D2, D3, D14, D15, D16, D20 Accepted per explicit human direction); test-environment labeling; commit, push, and PR as authorized by the human | Human authorized commit, push, and PR; **merge not authorized** | **pending** (PR review) | Pre-commit checks recorded in [HANDOFF.md](docs/development/HANDOFF.md) | self-review only (agent) | The agent decided which decisions counted as "explicitly approved"; the human should confirm in PR review | — |
 | 2026-10-14 | ADR 0021: hybrid AI orchestration (branch `docs/adr-0021-hybrid-ai`) | claude-code | Gap analysis against existing AI docs; drafted ADR 0021, interface sketch, SB-15–SB-17, living ADR index (`docs/adr/README.md`); verified Groq data-handling and structured-output facts against official Groq docs | Human defined the 10 architectural requirements, then **accepted the direction** and decided: no standing cloud permission for `HOST_SENSITIVE` (per request, exact payload and destination shown), no automatic cloud fallback, single-model first with a ≥ 15% reproducible-benchmark gate (methodology defined first, no regressions), and no shell/fs/privileged/network tools for agents (restricted provider adapter only) | Human reviewed the proposal and decided; **diff review pending** | none (documentation only) | not done | Benchmark protocol, prototypes, and provider endpoint details remain pending | The human tightened the agent's proposal: the gate became a concrete ≥ 15% threshold with methodology first, and "no automatic cloud fallback" became explicit |
+| 2026-10-14 | Sprint 1 Day 0 + **M1.1 walking skeleton** (branch `feat/s1-m1-walking-skeleton`, uncommitted) | claude-code | Day 0 environment checks; installed uv 0.12.21 (human-approved, WinGet, hash-verified); wrote all M1.1 code (core models and results, secure PowerShell runner, profile script and mapping, Windows and fake collectors, app service, CLI, PySide6 GUI) and tests; recorded ADR 0009 evidence | Human approved M1.1 scope, D1 (Python 3.12), the dependency list, uv via WinGet, `uv_build` as the build backend, and no `-ExecutionPolicy Bypass`; deferred the rules collector to after the D9 investigation; declined gitleaks auto-download | **pending** | 70 tests passed; ruff, mypy strict, and import-linter clean; live CLI and GUI runs (commands and outputs in [HANDOFF.md](docs/development/HANDOFF.md)) | self-review only (agent); security tests added for SB-01/03/05 | Fixtures are synthetic; the GUI was verified offscreen only; `pyside6-essentials` was chosen instead of the `pyside6` meta-package (subset, human may revisit) | One test-data bug (lone surrogates in the injection corpus) fixed during development; test assertions were not weakened |
 
 ## 2. Decision ledger
 
@@ -33,7 +34,9 @@ The ADR number matches the decision ID. Full list: [docs/planning/17-decisions-f
 | D16 Claude deny rules | AI-proposed | Accepted | Human authorized the implementation, 2026-10-14 |
 | D20 agent attribution | Human requirement; Codex trailer policy set by the human | Accepted | Explicitly directed, 2026-10-14 (quote in ADR 0020) |
 | D21 hybrid AI orchestration (v0.2+) | Human requirement (architecture direction), drafted by the agent | Accepted (direction; implementation details pending) | Human, 2026-10-14 (decisions quoted in ADR 0021) |
-| D1, D4–D13, D17–D19 | Mostly AI-proposed; the human supplied inputs (D7 location: Guatemala) | Proposed | **pending**. Reasons are listed per decision in [17](docs/planning/17-decisions-for-approval.md) (prototype- or benchmark-dependent, "evaluate" only, or not yet explicitly approved) |
+| D1 Python 3.12 + PySide6 | AI-proposed; PySide6 was a human requirement | Accepted | Human, 2026-10-14 ("Python 3.12 as the project's pinned Python version") |
+| D18 branch protection on `main` | AI-proposed; ruleset created by the human | Accepted | Human, 2026-10-14 (ruleset 25123659; CI checks are a future enhancement) |
+| D4–D13, D17, D19 | Mostly AI-proposed; the human supplied inputs (D7 location: Guatemala) | Proposed | **pending**. Reasons are listed per decision in [17](docs/planning/17-decisions-for-approval.md) (prototype- or benchmark-dependent, "evaluate" only, or not yet explicitly approved) |
 
 ## 3. Corrections log
 
@@ -49,12 +52,22 @@ Notable AI errors or weaknesses that were caught during review.
 
 ## 4. Validation evidence index
 
-No application code exists, and no application tests or benchmarks have been run. Configuration checks from M0 finalization (2026-10-14):
+**M1.1 (2026-10-14, uncommitted tree on `feat/s1-m1-walking-skeleton`, base `b18c97f`):**
+- `uv run --frozen pytest -q`: 70 passed (security 33, integration/windows 4, unit 24, UI 10).
+- ruff and format: clean.
+- `mypy` strict: 0 issues in 25 files.
+- `lint-imports`: 4 kept, 0 broken.
+- Live CLI exit 0 with 3 profiles; live GUI probe max heartbeat gap 79 ms.
+- **Human manual check:** `uv run --frozen firewallai-gui` opened on the Windows desktop and showed the Domain, Private, and Public profiles (reported by the human, 2026-10-14). No other manual interactions or error scenarios were tested.
+- No benchmarks (timings are informal single runs).
+
+Configuration checks from M0 finalization (2026-10-14):
 - the deny-rule test was blocked as intended;
 - both settings files are valid JSON;
 - the ignore rule was confirmed with `git check-ignore`.
 
 ## 5. Open items
 - Human review of every planning document (status `pending`).
-- Decisions D1, D4–D13, D17–D19.
+- Decisions D4–D13, D17, D19.
+- Human review of the M1.1 code (status `pending`).
 - Hyper-V availability (pending verification).
