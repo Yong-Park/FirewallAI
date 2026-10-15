@@ -17,7 +17,7 @@ This is the **living index and decision register** for FirewallAI. Update it in 
 | [0003](0003-ai-in-v0-2.md) | D3 | AI advisor ships in v0.2 | **Accepted** | |
 | [0004](0004-default-local-model.md) | D4 | Default recommended local model | Proposed | Benchmark-dependent |
 | [0005](0005-v0-1-report-formats.md) | D5 | v0.1 report formats (JSON, HTML, basic Qt PDF) | Proposed | Qt PDF prototype |
-| [0006](0006-v0-1-distribution.md) | D6 | v0.1 distribution (PyInstaller one-dir + Inno per-user) | Proposed | M1.5: portable one-folder dev build implemented and merged (#8); CI passed; human basic GUI acceptance 7/7 PASS; acceptance review and exact proposed wording in the ADR (awaiting human decision); clean-VM test and installer pending |
+| [0006](0006-v0-1-distribution.md) | D6 | v0.1 distribution (PyInstaller one-dir + Inno per-user) | **Accepted (development distribution only)** | Human, 2026-10-15: one-folder unsigned portable development build accepted (CI passed; basic GUI checks 7/7 PASS; detailed matrix 8/13 rows PASS, rows 1/3/5/8/9 partly verified and documented; no open packaging defects). **Public release NOT approved**; gates: installer, clean-VM Win11/Win10, signing, SR-M1.5-01, human decision on N-04, remaining manual sub-items |
 | [0007](0007-code-signing.md) | D7 | Code signing (SignPath → OV; Azure not eligible from Guatemala) | Proposed | OV CA availability [VERIFY] |
 | [0008](0008-windows-10-support.md) | D8 | Windows 10 best-effort | Proposed | |
 | [0009](0009-firewall-read-path.md) | D9 | Firewall read path: ActiveStore, non-elevated; bulk inventory + per-rule restricted filters | **Accepted** (v0.1 direction) | **Implemented in M1.3** (production collector, streaming). Measured full scan about 29-35 s, so **N-04 (10 s) exceeded**. Win10, GPO, service-hardening, and EnforcementStatus checks pending; interface-alias access verified on TE-1 |
@@ -37,5 +37,5 @@ This is the **living index and decision register** for FirewallAI. Update it in 
 | [0023](0023-beginner-first-ux.md) | D23 | Beginner-first, evidence-honest UX (guardrails UX-01…UX-10, new milestone UX0 before Sprint 3) | **Accepted** | Human requirement and approval 2026-10-15, with refinements (Windows profile names kept, possible-only rule relationships, attention vs. evidence confidence, comprehension checks C1–C3); current UI not redesigned until approved implementation |
 
 **Totals:**
-- Accepted: 0000, D1, D2, D3, D9 (v0.1 direction), D14, D15, D16, D18, D20, D21 (direction), D22, D23.
-- Proposed or pending: D4–D8, D10–D13, D17, D19.
+- Accepted: 0000, D1, D2, D3, D6 (development distribution only), D9 (v0.1 direction), D14, D15, D16, D18, D20, D21 (direction), D22, D23.
+- Proposed or pending: D4, D5, D7, D8, D10–D13, D17, D19.

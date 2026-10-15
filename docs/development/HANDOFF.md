@@ -7,12 +7,65 @@ Active agent lock: RELEASED
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- **M1.5 is merged** (PR #8, `6b150a3`), and its **documentation closeout is merged** (PR #9, `3a26f56`; tree identical to the reviewed commit `a3781c4`).
-- **UX direction (ADR 0023):** accepted by the human on 2026-10-15, with refinements. It is recorded on `docs/ux-beginner-first` (from `3a26f56`), **documentation only**. Commit and push are authorized; PR and merge are the human's decision.
-- **Not authorized:** merging, UI changes or a redesign of the current M1.x UI, Sprint 2 implementation, releases.
-- **ADR 0006 stays Proposed** until the detailed manual GUI checklist is completed and any new defects are fixed.
-- The N-04 gap, the endpoint cold-start gap, the unsigned development-only build, unverified Windows 10/clean-VM compatibility, and SR-M1.5-01 remain open.
-- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9). Ruleset 25123659 protects `main` (ADR 0018).
+- **`main` = `d008ff0`** (PR #10: ADR 0023 beginner-first UX, accepted).
+- **PR-A branch `docs/m1-5-final-acceptance`** (from `d008ff0`), documentation only: the M1.5 final acceptance record and **ADR 0006 Accepted for the development distribution only** (human, 2026-10-15). **Public release NOT approved.**
+- **Next, as separate PRs after PR-A:**
+  - **PR-B:** the UX0 design package (draft; not complete or validated until the wireframes and usability results are reviewed);
+  - **PR-C:** the Sprint 2 plan (M2.0–M2.5 proposed; each milestone needs its own authorization).
+  - Their drafts are preserved; see "Planning drafts" below.
+- **Not authorized:** application or GUI code changes, Sprint 2 implementation, new dependencies, publishing builds, and commits, pushes, PRs, or merges without approval.
+- **Open:**
+  - N-04 (rule scan about 27–30 s against 10 s);
+  - inconsistent endpoint cold start;
+  - unsigned development-only distribution;
+  - Windows 10 and clean-VM validation;
+  - the installer;
+  - signing;
+  - SR-M1.5-01;
+  - the unverified manual sub-items (rows 1, 3, 5, 8, 9).
+- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10).
+
+## Git after PR #10 [Verified, 2026-10-15]
+```
+$ git fetch origin                     -> 3a26f56..d008ff0  main
+$ git rev-parse b5a7734^{tree} origin/main^{tree}    # identical (c03149a5…)
+$ git switch main && git merge --ff-only origin/main  -> d008ff0
+$ git stash push --include-untracked -m "ux0-sprint2-drafts (all 13 planning drafts)"
+$ git switch -c docs/m1-5-final-acceptance   # PR-A files restored from the stash
+```
+
+## Planning drafts (preserved for PR-B and PR-C)
+All 13 draft files (UX0 package, Sprint 2 plan, related index/HANDOFF/ledger edits) are kept in **`git stash` "ux0-sprint2-drafts"**, with a backup copy outside the repository (agent scratchpad). They are split into PR-B and PR-C after PR-A, with the human's decisions B–F applied.
+
+## M1.5 final acceptance [reported by the human, 2026-10-15]
+**Confirmed PASS:**
+- the seven basic manual GUI checks;
+- DPI scaling at 100/150/200 %;
+- keyboard-only navigation;
+- closing during an active collection;
+- the related firewall rules panel (visual and functional inspection);
+- the N-04 GUI timing indication (full rule scan 27.9 s against the 10 s target; exceeded-target warning displayed correctly);
+- the portable folder (ran from a copied directory; no new files appeared).
+
+No new defects were reported, and CI for PR #8 passed both jobs.
+
+**Detailed matrix (`packaging/BUILD.md`): 8 of 13 rows PASS.** Rows 1, 3, 5, 8, and 9 are **partly verified**. Their basic evidence is preserved; these sub-items are **unverified and not marked PASS**:
+- row 1: no console window; window title;
+- row 3: cancel on the Rules tab; the cancelled-status text;
+- row 5: resizing during an active collection;
+- row 8: cancel on the Network tab; partial result with limitations;
+- row 9: endpoint filters; sorting; remote addresses visible in the GUI.
+
+**Decision (human, 2026-10-15):** ADR 0006 is **Accepted for the PyInstaller one-folder DEVELOPMENT distribution only**, with the residual manual-verification gaps documented. **Public release is NOT approved.**
+
+**Public-release gates** (in ADR 0006):
+1. installer;
+2. clean-VM Windows 11/10;
+3. signing;
+4. SR-M1.5-01;
+5. a human decision on N-04 and the endpoint cold start;
+6. the human publishes;
+7. the remaining manual sub-items.
 
 ## UX direction: human decisions (2026-10-15)
 - **Decision 1:** ADR 0023, the beginner-first UX direction, is **approved** with refinements. FirewallAI must be understandable to non-experts while keeping full technical evidence for advanced users.

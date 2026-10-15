@@ -1,6 +1,6 @@
 # ADR 0006: v0.1 distribution: PyInstaller one-dir + Inno Setup per-user installer
 
-- **Status:** Proposed · **Decision ID:** D6 · **Date:** 2026-10-14 · **Proposed by:** claude-code · **Decided by:** pending
+- **Status:** **Accepted for the PyInstaller one-folder DEVELOPMENT distribution only** (human, 2026-10-15). **Public release is NOT approved.** · **Decision ID:** D6 · **Date:** 2026-10-14 · **Proposed by:** claude-code · **Decided by:** human, 2026-10-15 (see "Decision record")
 
 ## 1. Problem
 Users must be able to install FirewallAI without Python or dev tools. v0.1 is read-only and needs no admin rights, so the installer shouldn't require them either.
@@ -72,7 +72,7 @@ The one-folder part of this decision was implemented and measured in M1.5 as a *
 - **Antivirus:** a local Microsoft Defender custom scan as a standard user (engine 1.1.26090.9, signatures 1.461.40.0) found no threats. Nothing was uploaded to third-party scanners.
 - **Not yet validated:** clean Windows 11 VM, clean Windows 10 22H2, the SmartScreen behaviour of a downloaded ZIP, the installer, signing, and CI execution.
 
-## Acceptance review (2026-10-15; status unchanged: Proposed)
+## Acceptance review (2026-10-15, before the decision; kept for history)
 The human set three conditions for accepting the one-folder portable development approach (M1.5 decision 2):
 
 | Condition | Status | Evidence |
@@ -86,12 +86,41 @@ The human set three conditions for accepting the one-folder portable development
 - the Inno Setup installer (Sprint 4);
 - signing ([ADR 0007](0007-code-signing.md)).
 
-## Proposed wording if accepted (for human review; not applied)
-Replace the status line with:
+## Decision record (human, 2026-10-15)
+**Accepted, for the development distribution only.** v0.1 is built as a PyInstaller **one-folder** bundle (`FirewallAI.exe` and `firewallai-cli.exe` sharing `_internal`):
+- built from the hash-locked lockfile in an isolated build environment, with reproducible settings;
+- checked by an automated bundle verifier, with a CycloneDX SBOM and SHA-256 checksums;
+- verified by CI on every pull request.
 
-> - **Status:** Accepted for the v0.1 one-folder development build (2026-MM-DD, date of human approval) · **Decision ID:** D6 · **Date:** 2026-10-14 · **Proposed by:** claude-code · **Decided by:** human, 2026-MM-DD
+It may be distributed **only as an unsigned portable ZIP for development and testing**. **Public release is not approved.**
 
-and add this section:
+**Acceptance evidence:**
+1. **CI:** met. PR #8's CI passed both jobs at `9af1f96` (after one fixed false positive).
+2. **Manual GUI checks:** **basic 7/7 PASS**. Also PASS:
+   - DPI scaling at 100/150/200 %;
+   - keyboard-only navigation;
+   - closing during an active collection;
+   - the related firewall rules panel;
+   - the N-04 timing indication (full rule scan 27.9 s against 10 s, warning shown);
+   - the portable-folder check (no new files).
 
-> ## Decision record
-> Accepted by the human. v0.1 is built as a PyInstaller **one-folder** bundle (`FirewallAI.exe` and `firewallai-cli.exe` sharing `_internal`). It is built from the hash-locked lockfile in an isolated build environment, with reproducible settings, an automated bundle verifier, a CycloneDX SBOM, and SHA-256 checksums, and is checked by CI on every pull request. Until Sprint 4 it is distributed only as an **unsigned portable ZIP for development and testing**, never as a public release. Before the first public release, all of the following are still required: the Inno Setup per-user installer, the §7 clean-VM validation (Windows 11 required, Windows 10 22H2 best-effort), signing per [ADR 0007](0007-code-signing.md), and completion of the detailed manual GUI checklist in `packaging/BUILD.md` (DPI scaling, keyboard-only operation, close during collection). Acceptance does not change the unmet N-04 target or the endpoint cold-start limitation.
+   The detailed matrix has **8 of 13 rows PASS**. **Rows 1, 3, 5, 8, and 9 are partly verified**, with sub-items **not independently confirmed**:
+   - no console window and the window title;
+   - cancel on the Rules tab and the cancelled status text;
+   - resizing during an active collection;
+   - cancel on the Network tab with partial results;
+   - endpoint filters, sorting, and remote addresses in the GUI.
+
+   See `packaging/BUILD.md`.
+3. **Packaging defects:** resolved; no new defects reported.
+
+The human accepted the development distribution **with these residual manual-verification gaps documented**. They are not claimed as passed and must be closed before any public release (gate 7).
+
+**Public-release gates** (all required before any public release; none waived):
+1. The Inno Setup per-user installer and uninstall flow (Sprint 4).
+2. The §7 clean-VM validation: Windows 11 (required) and Windows 10 22H2 (best-effort, logged).
+3. Code signing per [ADR 0007](0007-code-signing.md), or an explicitly approved unsigned-release decision with SmartScreen documentation.
+4. Security review item SR-M1.5-01 (PowerShell module resolution) resolved or explicitly accepted.
+5. A human decision on the N-04 performance gap (full rule scan about 27–30 s against 10 s) and the inconsistent endpoint cold-start timing. These remain **unmet and documented**, not waived.
+6. The human publishes the release. Agents never publish.
+7. The unverified sub-items of detailed checklist rows 1, 3, 5, 8, and 9 are verified (`packaging/BUILD.md`).
