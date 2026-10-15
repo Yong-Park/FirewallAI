@@ -2,7 +2,7 @@
 
 This is the **living index and decision register** for FirewallAI. Update it in the same change that adds an ADR or changes an ADR's status.
 
-- Process: [ADR 0000](0000-record-architecture-decisions.md). **ADR number = decision number** (ADR `NNNN` = decision `DNN`). New decisions continue at **D23 / 0023**.
+- Process: [ADR 0000](0000-record-architecture-decisions.md). **ADR number = decision number** (ADR `NNNN` = decision `DNN`). New decisions continue at **D24 / 0024**.
 - Template: [template.md](template.md).
 - Only the human owner moves an ADR to Accepted, Rejected, or Superseded. Agents draft ADRs as **Proposed**.
 - [docs/planning/17-decisions-for-approval.md](../planning/17-decisions-for-approval.md) is the **frozen M0 snapshot** of D1–D20 (2026-10-14), including the reasons each decision was then pending. From D21 on, and for every later status change, **this file is the source of truth**.
@@ -34,7 +34,8 @@ This is the **living index and decision register** for FirewallAI. Update it in 
 | [0020](0020-agent-attribution.md) | D20 | Agent attribution trailers | **Accepted** | |
 | [0021](0021-hybrid-ai-orchestration.md) | D21 | Hybrid AI orchestration (v0.2+): Python-orchestrated, single-model first, optional Gemini/Groq | **Accepted (direction)** | Benchmark protocol, prototypes, and provider details pending; adds SB-15–SB-17 |
 | [0022](0022-psutil-endpoint-collection.md) | D22 | psutil for local endpoint and process collection (M1.4), incl. psutil-only mypy settings | **Accepted** | Accepted by the human 2026-10-15 (psutil 7.2.2 pinned and hash-locked) |
+| [0023](0023-beginner-first-ux.md) | D23 | Beginner-first, evidence-honest UX (guardrails UX-01…UX-10, new milestone UX0 before Sprint 3) | **Accepted** | Human requirement and approval 2026-10-15, with refinements (Windows profile names kept, possible-only rule relationships, attention vs. evidence confidence, comprehension checks C1–C3); current UI not redesigned until approved implementation |
 
 **Totals:**
-- Accepted: 0000, D1, D2, D3, D9 (v0.1 direction), D14, D15, D16, D18, D20, D21 (direction), D22.
+- Accepted: 0000, D1, D2, D3, D9 (v0.1 direction), D14, D15, D16, D18, D20, D21 (direction), D22, D23.
 - Proposed or pending: D4–D8, D10–D13, D17, D19.
