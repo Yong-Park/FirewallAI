@@ -9,6 +9,7 @@ This folder describes **how FirewallAI is built right now**. It changes in the s
 | Packages, responsibilities, and allowed dependencies | [module-map.md](module-map.md) |
 | Invariants every change must keep | [security-boundaries.md](security-boundaries.md) |
 | User-experience guardrails (beginner-first, evidence-honest; ADR 0023) | [ux-principles.md](ux-principles.md) |
+| UX0 design package (information architecture, wireframes, tokens, copy, usability plan; draft) | [ux/](ux/README.md) |
 | Interfaces and contracts between layers | [interfaces.md](interfaces.md) |
 | Current project state and handoff | [../development/HANDOFF.md](../development/HANDOFF.md) |
 

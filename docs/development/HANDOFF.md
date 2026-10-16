@@ -7,13 +7,10 @@ Active agent lock: RELEASED
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- **`main` = `d008ff0`** (PR #10: ADR 0023 beginner-first UX, accepted).
-- **PR-A branch `docs/m1-5-final-acceptance`** (from `d008ff0`), documentation only: the M1.5 final acceptance record and **ADR 0006 Accepted for the development distribution only** (human, 2026-10-15). **Public release NOT approved.**
-- **Next, as separate PRs after PR-A:**
-  - **PR-B:** the UX0 design package (draft; not complete or validated until the wireframes and usability results are reviewed);
-  - **PR-C:** the Sprint 2 plan (M2.0–M2.5 proposed; each milestone needs its own authorization).
-  - Their drafts are preserved; see "Planning drafts" below.
-- **Not authorized:** application or GUI code changes, Sprint 2 implementation, new dependencies, publishing builds, and commits, pushes, PRs, or merges without approval.
+- **`main` = `be7316c`** (PR #11: M1.5 final acceptance; ADR 0006 Accepted for the development distribution only; tree identical to the reviewed `be065be`).
+- **PR-B branch `docs/ux0-design-foundation`** (from `be7316c`), documentation only, uncommitted: the **UX0 design package as a DRAFT**, with decisions B and F applied. **UX0 is not complete or validated**; the usability test has **not been run**.
+- **Next:** PR-C, the Sprint 2 plan (draft preserved in the stash; M2.0–M2.5 each need their own authorization).
+- **Not authorized:** GUI implementation or redesign, application code changes, Sprint 2 implementation, new dependencies, publishing builds, and commits, pushes, PRs, or merges without approval.
 - **Open:**
   - N-04 (rule scan about 27–30 s against 10 s);
   - inconsistent endpoint cold start;
@@ -23,19 +20,53 @@ Active agent lock: RELEASED
   - signing;
   - SR-M1.5-01;
   - the unverified manual sub-items (rows 1, 3, 5, 8, 9).
-- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10).
+- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10), M1.5 final acceptance (#11).
 
-## Git after PR #10 [Verified, 2026-10-15]
+## Git after PR #11 [Verified, 2026-10-15]
 ```
-$ git fetch origin                     -> 3a26f56..d008ff0  main
-$ git rev-parse b5a7734^{tree} origin/main^{tree}    # identical (c03149a5…)
-$ git switch main && git merge --ff-only origin/main  -> d008ff0
-$ git stash push --include-untracked -m "ux0-sprint2-drafts (all 13 planning drafts)"
-$ git switch -c docs/m1-5-final-acceptance   # PR-A files restored from the stash
+$ git fetch origin                     -> d008ff0..be7316c  main
+$ git rev-parse be065be^{tree} origin/main^{tree}    # identical (8296481c…)
+$ git switch main && git merge --ff-only origin/main  -> be7316c
+$ git switch -c docs/ux0-design-foundation
+# UX0 files restored from stash "ux0-sprint2-drafts" only (6 ux/ docs + architecture index link);
+# byte-identical to the preserved backup. sprint-2-plan.md stays in the stash for PR-C.
 ```
 
-## Planning drafts (preserved for PR-B and PR-C)
-All 13 draft files (UX0 package, Sprint 2 plan, related index/HANDOFF/ledger edits) are kept in **`git stash` "ux0-sprint2-drafts"**, with a backup copy outside the repository (agent scratchpad). They are split into PR-B and PR-C after PR-A, with the human's decisions B–F applied.
+## UX0 design package (DRAFT) [human decisions B and F, 2026-10-15]
+- **Location:** `docs/architecture/ux/`:
+  - README: status, the four-way distinction, boundaries, decisions, recommendations R1–R4, exit criteria;
+  - information-architecture.md;
+  - wireframes.md;
+  - status-and-tokens.md;
+  - copy-guide.md;
+  - usability-test-plan.md.
+- **Applied:**
+  - observed facts, verified findings, unknown/incomplete evidence, and **actual network reachability** (never shown as known) are kept apart;
+  - Windows **Domain/Private/Public network profile** names stay correct, with plain descriptions and labelled examples, and the navigation label is "Network profiles";
+  - the beginner Overview is the default, with optional technical details;
+  - no GUI implementation.
+- **Decisions R1–R4 (human, 2026-10-15), recorded as design requirements, not implemented:**
+  - **R1:** Advanced view is session-only. It is not persisted until the storage/privacy design is separately approved, and the default is beginner-friendly.
+  - **R2 (with refinements):**
+    - first launch explains what is read and asks for **explicit authorization** before the first quick check;
+    - after that, an automatic quick check (profiles and endpoints only) is allowed, under a user setting and with Cancel;
+    - the full rule collection is always user-initiated, with an **estimated** duration (no exact promise);
+    - a quick check is never "safe" and never a complete verdict;
+    - SB-18/19/20 are respected.
+    - **Dependency:** remembering the authorization or setting across launches needs persisted settings. Until the storage/privacy design is approved, it lasts for the session only.
+  - **R3:** moderated walkthroughs of the text wireframes with synthetic data; a clickable Qt prototype with synthetic fixtures only as a separately authorized Sprint 3 activity.
+  - **R4:** Domain/Private/Public with concise descriptions and explicitly labelled examples; never imply a location always maps to a profile.
+- **Exit criteria:**
+  1. Human design approval: structure approved as a draft; final approval after the usability round.
+  2. **The usability round: NOT run.**
+  3. R1–R4: decided.
+- **UX0 stays DRAFT and NOT validated.** No GUI redesign implemented.
+
+## Planning drafts (preserved for PR-C)
+The original 13 draft files are still kept in **`git stash` "ux0-sprint2-drafts"**, with a backup copy outside the repository (agent scratchpad).
+- **UX0 (PR-B):** restored onto `docs/ux0-design-foundation` and revised with decisions B and F.
+- **Sprint 2 plan (PR-C):** still only in the stash. It will be restored and revised with decisions C–E after PR-B.
+- The stash's older versions of the indexes, HANDOFF, and ledger are superseded and will not be reused.
 
 ## M1.5 final acceptance [reported by the human, 2026-10-15]
 **Confirmed PASS:**

@@ -2,6 +2,8 @@
 
 **Status: Accepted** with [ADR 0023](../adr/0023-beginner-first-ux.md) (human, 2026-10-15, with refinements). These are living guardrails. The current M1.x UI is **not** redesigned until an approved implementation milestone (UX0 design, then Sprint 3).
 
+The UX0 design package that applies these guardrails (draft, not yet validated) is in [ux/](ux/README.md).
+
 Like [security-boundaries.md](security-boundaries.md), these guardrails apply to every user-facing surface: the GUI first, reports (SecurityDocs) later. They never override a security boundary. **When clarity and accuracy conflict, accuracy wins and the wording changes.**
 
 ## 1. Audience and the questions every screen must answer
