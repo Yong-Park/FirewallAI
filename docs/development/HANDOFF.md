@@ -7,20 +7,59 @@ Active agent lock: RELEASED
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- **`main` = `be7316c`** (PR #11: M1.5 final acceptance; ADR 0006 Accepted for the development distribution only; tree identical to the reviewed `be065be`).
-- **PR-B branch `docs/ux0-design-foundation`** (from `be7316c`), documentation only, uncommitted: the **UX0 design package as a DRAFT**, with decisions B and F applied. **UX0 is not complete or validated**; the usability test has **not been run**.
-- **Next:** PR-C, the Sprint 2 plan (draft preserved in the stash; M2.0–M2.5 each need their own authorization).
-- **Not authorized:** GUI implementation or redesign, application code changes, Sprint 2 implementation, new dependencies, publishing builds, and commits, pushes, PRs, or merges without approval.
+- **`main` = `9f590c6`** (PR #12: UX0 design package, **DRAFT, not validated**, usability study **not run**; tree identical to the reviewed `a4bbd33`).
+- **PR-C branch `docs/sprint2-plan`** (from `9f590c6`), documentation only, uncommitted: [sprint-2-plan.md](sprint-2-plan.md). It covers:
+  - milestones M2.0–M2.5, each needing separate authorization;
+  - the SB-21 contract requirements (**SB-21 stays Proposed**; its precise contract is reviewed and approved in M2.0);
+  - the decision-E outcomes;
+  - the provisional catalog (9 entries) and the recorded F1-10 gap;
+  - the privacy-design gate;
+  - the N-04 investigation and the SR-M1.5-01 prerequisite review (P0, before M2.1).
+- **Not authorized:**
+  - any Sprint 2 implementation, including M2.0 ADR acceptance;
+  - GUI implementation or redesign;
+  - application code changes, new dependencies, publishing builds;
+  - commits, pushes, PRs, or merges without approval.
 - **Open:**
-  - N-04 (rule scan about 27–30 s against 10 s);
+  - N-04 (rule scan about 27–35 s against 10 s);
   - inconsistent endpoint cold start;
   - unsigned development-only distribution;
   - Windows 10 and clean-VM validation;
   - the installer;
   - signing;
   - SR-M1.5-01;
-  - the unverified manual sub-items (rows 1, 3, 5, 8, 9).
-- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10), M1.5 final acceptance (#11).
+  - the unverified manual sub-items (rows 1, 3, 5, 8, 9);
+  - the UX0 usability round;
+  - all VM validation requirements (S3: preserved, not moved or waived).
+- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10), M1.5 final acceptance (#11), UX0 draft (#12).
+
+## Git after PR #12 [Verified, 2026-10-15]
+```
+$ git fetch origin                     -> be7316c..9f590c6  main
+$ git rev-parse a4bbd33^{tree} origin/main^{tree}    # identical (a96b833e…)
+$ git switch main && git merge --ff-only origin/main  -> 9f590c6
+$ git switch -c docs/sprint2-plan
+$ git show 'stash@{0}^3:docs/development/sprint-2-plan.md' > docs/development/sprint-2-plan.md
+# only the Sprint 2 plan restored (byte-identical to the backup), then revised with decisions C–E and the refinements of 2026-10-15
+```
+
+## Sprint 2 plan (PR-C, draft) [human decisions C, D, E, 2026-10-15]
+- **C:** M2.0–M2.5 are approved as a structure. Each milestone needs explicit authorization. **No engine implementation is authorized.** M2.0 must resolve the effective-policy evidence contract before M2.2.
+- **D:** the SB-21 principle is approved; **SB-21 stays Proposed** until its precise contract is reviewed and approved in M2.0. `PermittedByPolicy` never means a real connection, internet reachability, that WFP/third-party/outside devices can't block, or that the PC is safe. Missing decisive evidence → Indeterminate. SB-18 and SB-20 are not weakened.
+- **E:**
+  - **S1:** JSON/TOML fixtures.
+  - **S2:** `hypothesis` deferred.
+  - **S3:** all VM validation requirements preserved; nothing moved, waived, or redefined; any schedule change only as a proposal for human approval.
+  - **S4:** `scan --json` with evidence completeness.
+  - **S5:** N-04 investigation planned, not started.
+  - **S6:** SR-M1.5-01 is a separate prerequisite investigation (P0) before M2.1; a `Get-Command` origin check alone is not assumed sufficient; a narrowly scoped hardening design comes for separate approval; nothing implemented in PR-C.
+  - **S7, S8:** FW-RULE-003 and FW-ENV-001 deferred.
+  - **Q2:** unverified GPO merge → Indeterminate.
+  - **Q3:** WFP limitation on every verdict.
+  - **Q4:** Security Center readability investigated first.
+  - **Q5:** M2.4 blocked on an approved privacy design; no automatic persistence, no 50-scan default, no DPAPI without a separate decision.
+  - **Q6:** 9 supported frozen entries as a provisional catalog; FW-EXP-002 pending review of its port/process list and evidence; FW-RULE-003 and FW-ENV-001 deferred; **F1-10 (≥10) not waived**: the gap and safe options are recorded for a human decision before the M2.3 acceptance.
+- **Refinements (human, 2026-10-15):** precedence (IPsec, Block/Allow, defaults, GPO merge, WFP) is not finalized and must be verified against authoritative Windows behaviour, otherwise Indeterminate; a local-policy verdict never implies real-world connectivity, internet reachability, or complete device security; loopback-only results describe the verified local binding and are never an unqualified "not exposed" (a label rename is only a proposal); every milestone M2.0–M2.5 needs separate authorization; six-field explanations plus complete technical evidence; UX0 stays DRAFT and not usability-validated; no generative AI in the verdict engine.
 
 ## Git after PR #11 [Verified, 2026-10-15]
 ```
@@ -62,11 +101,12 @@ $ git switch -c docs/ux0-design-foundation
   3. R1–R4: decided.
 - **UX0 stays DRAFT and NOT validated.** No GUI redesign implemented.
 
-## Planning drafts (preserved for PR-C)
-The original 13 draft files are still kept in **`git stash` "ux0-sprint2-drafts"**, with a backup copy outside the repository (agent scratchpad).
-- **UX0 (PR-B):** restored onto `docs/ux0-design-foundation` and revised with decisions B and F.
-- **Sprint 2 plan (PR-C):** still only in the stash. It will be restored and revised with decisions C–E after PR-B.
-- The stash's older versions of the indexes, HANDOFF, and ledger are superseded and will not be reused.
+## Planning drafts
+All drafts from the stash "ux0-sprint2-drafts" have now been used:
+- UX0 → PR #12 (merged);
+- the Sprint 2 plan → PR-C (`docs/sprint2-plan`).
+
+The stash's older index/HANDOFF/ledger versions are superseded. The stash entry is kept until the human approves dropping it; agents do not delete it on their own.
 
 ## M1.5 final acceptance [reported by the human, 2026-10-15]
 **Confirmed PASS:**
