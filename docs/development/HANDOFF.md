@@ -7,18 +7,16 @@ Active agent lock: RELEASED
 > Protocol: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## Position
-- **`main` = `9f590c6`** (PR #12: UX0 design package, **DRAFT, not validated**, usability study **not run**; tree identical to the reviewed `a4bbd33`).
-- **PR-C branch `docs/sprint2-plan`** (from `9f590c6`), documentation only, uncommitted: [sprint-2-plan.md](sprint-2-plan.md). It covers:
-  - milestones M2.0–M2.5, each needing separate authorization;
-  - the SB-21 contract requirements (**SB-21 stays Proposed**; its precise contract is reviewed and approved in M2.0);
-  - the decision-E outcomes;
-  - the provisional catalog (9 entries) and the recorded F1-10 gap;
-  - the privacy-design gate;
-  - the N-04 investigation and the SR-M1.5-01 prerequisite review (P0, before M2.1).
+- **`main` = `fd69bfa`** (PR #13: Sprint 2 plan, documentation only; tree identical to the reviewed `4ce3440`).
+- **M2.0 branch `docs/m2.0-contracts`** (from `fd69bfa`), documentation and security-contract design only, **uncommitted**. Authorized by the human on 2026-10-15. Drafts:
+  - [ADR 0024](../adr/0024-local-policy-verdict-contract.md) (**Proposed**);
+  - [verdict-contract.md](../architecture/verdict-contract.md) (SB-21, **proposed, not in force**);
+  - [findings-contract.md](../architecture/findings-contract.md) (finding contract, `firewallai.scan/1`, JSON fixtures, about 40 scenarios).
+- **Open decisions for the human:** M20-Q1…Q9 (ADR 0024 §9). The most important is M20-Q1: authorizing, step by step, any documented precedence step that is not VM-verified. **No step is authorized.**
 - **Not authorized:**
-  - any Sprint 2 implementation, including M2.0 ADR acceptance;
-  - GUI implementation or redesign;
-  - application code changes, new dependencies, publishing builds;
+  - the policy evaluator (M2.2) or any other Sprint 2 implementation;
+  - M2.1, which waits for SR-M1.5-01 (P0);
+  - GUI changes, dependencies, builds;
   - commits, pushes, PRs, or merges without approval.
 - **Open:**
   - N-04 (rule scan about 27–35 s against 10 s);
@@ -30,8 +28,34 @@ Active agent lock: RELEASED
   - SR-M1.5-01;
   - the unverified manual sub-items (rows 1, 3, 5, 8, 9);
   - the UX0 usability round;
-  - all VM validation requirements (S3: preserved, not moved or waived).
-- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10), M1.5 final acceptance (#11), UX0 draft (#12).
+  - all VM validation requirements, including the two-VM real-behaviour test (S3: preserved, not moved or waived).
+- `main` history: M0 (#1, #2), ADR 0021 (#3), M1.1 (#4), M1.2 (#5), M1.3 (#6), M1.4 (#7), M1.5 (#8), M1.5 closeout (#9), ADR 0023 (#10), M1.5 final acceptance (#11), UX0 draft (#12), Sprint 2 plan (#13).
+
+## Git after PR #13 [Verified, 2026-10-15]
+```
+$ git fetch origin                     -> 9f590c6..fd69bfa  main
+$ git rev-parse 4ce3440^{tree} origin/main^{tree}    # identical (e0defe4f…)
+$ git switch main && git merge --ff-only origin/main  -> fd69bfaf435b98a6c99e5304b4b1f886826e5658
+$ git switch -c docs/m2.0-contracts
+$ git stash list   # stash@{0} "ux0-sprint2-drafts" kept (drop only with human approval)
+```
+
+## M2.0 security contracts (draft, refined) [human review, 2026-10-15]
+- **Human decisions:** the general architecture was approved for refinement, and then **approved for commit and push as a Proposed contract**, with two final clarifications (remote traffic scope; documentation, verification, and authorization as separate step attributes). ADR 0024 and SB-21 stay **Proposed** and non-binding. No implementation is authorized.
+- **Two layers:** `windows_policy` (Windows Firewall's readable configuration) is separate from `overall_filtering`, which is always `not_determined` in v0.1.
+- **Scenario:** inbound, unsolicited, TCP only, **one address family per record**, one interface and profile, the endpoint's local destination port. The remote quantifier is fixed at **all remote addresses and ports**, applied per record family and over all remote source ports. UDP is `NotEvaluated`. Dual-stack ambiguity affects only the IPv4 record.
+- **States:** Indeterminate, NotEvaluated, incomplete collection, and collection failure are kept separate (verdict-contract §4).
+- **Steps:** each has a source and three independent attributes: documentation, verification (against real traffic), and authorization (human). **None is verified or authorized.** P5, P6, and P7 have dossiers for the M20-Q1 per-step decision.
+- **Reason codes:** the 13 proposed codes were consolidated to 11, each mapped to its meaning, trigger, overlap, beginner text, and JSON (M20-Q8, pending compatibility review).
+- **Duplicates:** FW-RULE-004 needs exact duplicates with complete evidence; possible overlaps are not findings.
+- **Catalog:** 9 provisional entries; F1-10 remains unmet; FW-EXP-002 stays pending.
+- **Errata E1–E5** (loopback label, third-party layer, NotEvaluated state, remote-scope handling, JSON fixtures) are proposed. **Nothing in `docs/planning/` has been changed.**
+- **Sources:** Microsoft Learn [S1]–[S3], accessed 2026-10-15. Documentation only; **no behaviour verification**.
+- **Dependencies:**
+  - SR-M1.5-01 (P0) before M2.1;
+  - the two-VM test and the GPO VM are required for `vm-verified`.
+- **Tests:** no code changed and **no code tests were run** (documentation only).
+- **Documentation checks:** the privacy check is now baseline-aware. A path string already on `main` (`runneradmin`, the CI runner's upstream build path in the M1.5 notes) is a baseline match, not new content.
 
 ## Git after PR #12 [Verified, 2026-10-15]
 ```
